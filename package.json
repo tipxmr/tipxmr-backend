@@ -1,0 +1,15 @@
+{
+  "name": "tipxmr-backend",
+  "version": "1.0.0",
+  "description": "Backend for TipXMR",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "tipxmr",
+    "monero"
+  ],
+  "author": "Grischa Daum, Alex Anarcho",
+  "license": "AGPL-3.0-or-later"
+}
