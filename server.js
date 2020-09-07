@@ -1,3 +1,4 @@
+const services = require("./services.js");
 const io = require("socket.io")(3000);
 
 let streamers = {};
@@ -56,19 +57,5 @@ io.on("connect", (socket) => {
     io.to(data.donatorSocketId).emit("returnSubaddress", data);
   });
 
-  function onDisconnectOrTimeout(reason) {
-    if (reason === "io client disconnect") {
-      const disconnectedStreamer = Object.values(streamers).find(
-        (streamer) => streamer.streamerSocketId === socket.id
-      );
-      streamers[disconnectedStreamer.streamerName].online = false;
-      console.log(
-        "streamer: " +
-          streamers[disconnectedStreamer.streamerName].streamerName +
-          " disconnected"
-      );
-    }
-  }
-
-  socket.on("disconnect", (reason) => {});
+  socket.on("disconnect", () => onDisconnectOrTimeout(streamers));
 });
