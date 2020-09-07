@@ -11,5 +11,8 @@
     "monero"
   ],
   "author": "Grischa Daum, Alex Anarcho",
-  "license": "AGPL-3.0-or-later"
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "socket.io": "^2.3.0"
+  }
 }
