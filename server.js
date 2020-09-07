@@ -1,16 +1,26 @@
 const io = require("socket.io")(3000);
 
-let streamers = [];
+let streamers = {};
+
+function onDisconnectOrTimeout(streamers) {
+  const disconnectedStreamer = Object.values(streamers).find(
+    (streamer) => streamer.streamerSocketId === socket.id
+  );
+  streamers[disconnectedStreamer.streamerName].online = false;
+  console.log(
+    "streamer: " +
+      streamers[disconnectedStreamer.streamerName].streamerName +
+      " disconnected"
+  );
+}
 
 function addStreamer(socketId, streamerInfo) {
-  const existingStreamer = streamers.find(
-    (streamer) => streamer.streamerName === streamerInfo.streamerName
-  );
+  const existingStreamer = streamers[streamerInfo.streamerName];
   // if Streamer existits, update streamer id, if socketId differs
   if (existingStreamer !== undefined) {
     if (existingStreamer.streamerSocketId !== socketId) {
-      existingStreamer.streamerSocketId = socketId;
-      existingStreamer.online = true;
+      streamers[streamerInfo.streamerName].streamerSocketId = socketId;
+      streamers[streamerInfo.streamerName].online = true;
       console.log(
         "Updated SocketID of existing streamer: " +
           existingStreamer.streamerName
@@ -18,12 +28,12 @@ function addStreamer(socketId, streamerInfo) {
     }
   } else {
     // new streamer added
-    streamers.push({
+    streamers[streamerInfo.streamerName] = {
       streamerSocketId: socketId,
       streamerName: streamerInfo.streamerName,
       hashedSeed: streamerInfo.hashedSeed,
       online: true,
-    });
+    };
     console.log("Added new streamer: " + streamerInfo.streamerName);
   }
 }
@@ -38,16 +48,17 @@ io.on("connect", (socket) => {
     console.log(
       data.donor + " requested subaddress of streamer: " + data.streamerName
     );
-    const requestedStreamer = streamers.find(
-      (streamer) => streamer.streamerName === data.streamerName
-    );
+    const requestedStreamer = streamers[streamerInfo.streamerName];
     if (requestedStreamer !== undefined && requestedStreamer.online === true) {
       // add socketID to data object, so the backend knows where to send the subaddress
       data.donatorSocketId = socket.id;
       // backend relays request to specific streamer
       io.to(requestedStreamer.streamerSocketId).emit("getSubaddress", data);
     } else {
-      io.to(socket.id).emit("returnSubaddress", "Streamer not found or online");
+      io.to(socket.id).emit(
+        "returnSubaddress",
+        "Streamer not found or not online"
+      );
     }
   });
 
@@ -57,15 +68,5 @@ io.on("connect", (socket) => {
     io.to(data.donatorSocketId).emit("returnSubaddress", data);
   });
 
-  socket.on("disconnect", (reason) => {
-    if (reason === "io client disconnect") {
-      const disconnectedStreamer = streamers.find(
-        (streamer) => streamer.streamerSocketId === socket.id
-      );
-      disconnectedStreamer.online = false;
-      console.log(
-        "streamer: " + disconnectedStreamer.streamerName + " disconnected"
-      );
-    }
-  });
+  socket.on("disconnect", () => onDisconnectOrTimeout(streamers));
 });
