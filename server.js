@@ -1,13 +1,16 @@
-const io = require("socket.io")(3000);
-io.origins("*:*");
+const io = require("socket.io")(3000, { origins: "*:*" });
+var PouchDB = require("pouchdb");
+PouchDB.plugin(require("pouchdb-adapter-memory"));
+var pouch = new PouchDB("myDB", { adapter: "memory" });
 
 let streamers = {};
 
 function onDisconnectOrTimeout(socket) {
   console.log("streamers", streamers);
-  const disconnectedStreamer = Object.values(streamers).find(
-    (streamer) => streamer.streamerSocketId === socket.id
-  );
+  const disconnectedStreamer = Object.values(streamers).find((streamer) => {
+    console.log("streamer", streamer);
+    return streamer.streamerSocketId === socket.id;
+  });
   console.log("disconnectedStreamer", disconnectedStreamer); // always undefined?
   if (disconnectedStreamer !== undefined) {
     streamers[disconnectedStreamer.streamerName].online = false;
