@@ -32,7 +32,6 @@ io.on("connect", (socket) => {
   // Streamer connects
   socket.on("streamerInfo", (streamerInfo) => {
     addStreamer(socket.id, streamerInfo);
-    console.dir("all streamers:", streamers);
   });
   // donator requests Subaddress
   socket.on("getSubaddress", (data) => {
