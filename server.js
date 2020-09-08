@@ -1,7 +1,7 @@
 const io = require("socket.io")(3000, { origins: "*:*" });
 var PouchDB = require("pouchdb");
 PouchDB.plugin(require("pouchdb-adapter-memory"));
-var pouch = new PouchDB("myDB", { adapter: "memory" });
+var pouch = new PouchDB("streamers", { adapter: "memory" });
 
 let streamers = {};
 
