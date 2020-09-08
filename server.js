@@ -1,7 +1,7 @@
 const io = require("socket.io")(3000, { origins: "*:*" });
 var PouchDB = require("pouchdb");
 PouchDB.plugin(require("pouchdb-adapter-memory"));
-var pouch = new PouchDB("streamers", { adapter: "memory" });
+//var pouch = new PouchDB("streamers", { adapter: "memory" });
 
 let streamers = {};
 
@@ -51,6 +51,7 @@ io.on("connect", (socket) => {
   socket.on("streamerInfo", (streamerInfo) => {
     addStreamer(socket.id, streamerInfo);
   });
+
   // donator requests Subaddress
   socket.on("getSubaddress", (data) => {
     console.log(
@@ -75,5 +76,9 @@ io.on("connect", (socket) => {
     console.log("Subaddress", data.subaddress);
     io.to(data.donatorSocketId).emit("returnSubaddress", data);
   });
+
   socket.on("disconnect", () => onDisconnectOrTimeout(socket));
+
+  // streamer wallet recieved donation
+  socket.on("donationRevieved", (data) => {});
 });
