@@ -1,17 +1,25 @@
-const io = require("socket.io")(3000);
+const io = require("socket.io")(3000, { origins: "*:*" });
+var PouchDB = require("pouchdb");
+PouchDB.plugin(require("pouchdb-adapter-memory"));
+var pouch = new PouchDB("myDB", { adapter: "memory" });
 
 let streamers = {};
 
-function onDisconnectOrTimeout(streamers) {
-  const disconnectedStreamer = Object.values(streamers).find(
-    (streamer) => streamer.streamerSocketId === socket.id
-  );
-  streamers[disconnectedStreamer.streamerName].online = false;
-  console.log(
-    "streamer: " +
-      streamers[disconnectedStreamer.streamerName].streamerName +
-      " disconnected"
-  );
+function onDisconnectOrTimeout(socket) {
+  console.log("streamers", streamers);
+  const disconnectedStreamer = Object.values(streamers).find((streamer) => {
+    console.log("streamer", streamer);
+    return streamer.streamerSocketId === socket.id;
+  });
+  console.log("disconnectedStreamer", disconnectedStreamer); // always undefined?
+  if (disconnectedStreamer !== undefined) {
+    streamers[disconnectedStreamer.streamerName].online = false;
+    console.log(
+      "streamer: " +
+        streamers[disconnectedStreamer.streamerName].streamerName +
+        " disconnected"
+    );
+  }
 }
 
 function addStreamer(socketId, streamerInfo) {
@@ -48,7 +56,7 @@ io.on("connect", (socket) => {
     console.log(
       data.donor + " requested subaddress of streamer: " + data.streamerName
     );
-    const requestedStreamer = streamers[streamerInfo.streamerName];
+    const requestedStreamer = streamers[data.streamerName];
     if (requestedStreamer !== undefined && requestedStreamer.online === true) {
       // add socketID to data object, so the backend knows where to send the subaddress
       data.donatorSocketId = socket.id;
@@ -67,6 +75,5 @@ io.on("connect", (socket) => {
     console.log("Subaddress", data.subaddress);
     io.to(data.donatorSocketId).emit("returnSubaddress", data);
   });
-
-  socket.on("disconnect", () => onDisconnectOrTimeout(streamers));
+  socket.on("disconnect", () => onDisconnectOrTimeout(socket));
 });

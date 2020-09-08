@@ -4,6 +4,7 @@
   "description": "Backend for TipXMR",
   "main": "index.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -14,6 +15,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "pouchdb": "^7.2.2",
+    "pouchdb-adapter-memory": "^7.2.2",
     "socket.io": "^2.3.0"
   }
 }
