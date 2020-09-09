@@ -1,4 +1,4 @@
-const io = require("socket.io")(3000, { origins: "*:*" });
+var socketio = require("./socket");
 var PouchDB = require("pouchdb");
 PouchDB.plugin(require("pouchdb-adapter-memory"));
 //var pouch = new PouchDB("streamers", { adapter: "memory" });
@@ -80,5 +80,7 @@ io.on("connect", (socket) => {
   socket.on("disconnect", () => onDisconnectOrTimeout(socket));
 
   // streamer wallet recieved donation
-  socket.on("donationRevieved", (data) => {});
+  socket.on("paymentRecieved", (data) => {
+    console.dir(data);
+  });
 });
