@@ -3,8 +3,6 @@ const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const db = require("./db");
 
-let streamers = {};
-
 // ===============================================================
 // Streamer Namespace
 // ===============================================================
@@ -47,7 +45,10 @@ donatorNamespace.on("connection", (socket) => {
   socket.on("disconnect", () => {});
 });
 
-// all functions
+// ===============================================================
+// All Functions
+// ===============================================================
+
 function addStreamer(socketId, streamerInfo) {
   const existingStreamer = streamers[streamerInfo.streamerName];
   // if Streamer existits, update streamer id, if socketId differs
@@ -73,12 +74,9 @@ function addStreamer(socketId, streamerInfo) {
 }
 
 function onStreamerDisconnectOrTimeout(socket) {
-  console.log("streamers", streamers);
   const disconnectedStreamer = Object.values(streamers).find((streamer) => {
-    console.log("streamer", streamer);
     return streamer.streamerSocketId === socket.id;
   });
-  console.log("disconnectedStreamer", disconnectedStreamer); // always undefined?
   if (disconnectedStreamer !== undefined) {
     streamers[disconnectedStreamer.streamerName].online = false;
     console.log(
@@ -86,5 +84,11 @@ function onStreamerDisconnectOrTimeout(socket) {
         streamers[disconnectedStreamer.streamerName].streamerName +
         " disconnected"
     );
+  } else {
+    console.log("Undefined streamer disconnected");
   }
+}
+
+function onDonatorDisconnectOrTimeout(socket) {
+  console.log("disconnected Donator (" + socket.id + ")");
 }

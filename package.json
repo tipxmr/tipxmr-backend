@@ -2,10 +2,8 @@
   "name": "tipxmr-backend",
   "version": "1.0.0",
   "description": "Backend for TipXMR",
-  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "keywords": [
     "tipxmr",
