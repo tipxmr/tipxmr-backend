@@ -15,6 +15,7 @@ let streamer = {
   _id: hashedSeed,
   username: streamerName.toLowerCase(),
   displayName: streamerName,
+  online: false,
   account: {
     basic: true,
     advanced: true,
@@ -50,19 +51,20 @@ function return_error(message, error = {}) {
 }
 
 async function addStreamer(socketId, doc) {
-  return getUserByUsername(doc.username).then((res) => {
+  return getStreamerByUsername(doc.username).then((res) => {
     if (res.length > 0) {
       console.log(doc.username + " is taken");
       return return_error("username_taken");
     } else {
       doc.streamerSocketId = socketId;
+      doc.online = true;
       console.log(doc.username + " successfully created");
       return db.putIfNotExists(doc);
     }
   });
 }
 
-async function getUserByUsername(username) {
+async function getStreamerByUsername(username) {
   return db.find({
     selector: {
       username: { $eq: username },
@@ -120,4 +122,4 @@ async function testDB() {
 }
 testDB();
 
-module.exports = [addStreamer, getUserByUsername, updateStreamer, showAll];
+module.exports = [addStreamer, getStreamerByUsername, updateStreamer, showAll];
