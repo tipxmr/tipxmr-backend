@@ -32,6 +32,27 @@ let streamer = {
     sound: "/src/sounds/crocodile.mp3",
   },
 };
+let streamer2 = {
+  _id: hashedSeed,
+  username: streamerName.toLowerCase(),
+  displayName: streamerName,
+  account: {
+    basic: false,
+    advanced: false,
+    premium: false,
+  },
+  stream: {
+    secondprice: 0.00043,
+    fontcolor: "#F23456",
+    minamount: 0.00043,
+    gifs: true,
+    goal: 1,
+    goalprogress: 0,
+    goalreached: false,
+    charlimit: 1000,
+    sound: "/src/sounds/crocodile.mp3",
+  },
+};
 
 // return code masks
 function return_success(message, data = {}) {
@@ -60,7 +81,7 @@ async function addStreamer(socketId, doc) {
   try {
     // step 1: try to get the user with the username
     const userDoc = await getUserByUsername(doc.username);
-    console.log(userDoc);
+    // console.log(userDoc);
     if (userDoc.docs.length > 0) {
       console.log(doc.username + " is taken");
       return return_error("username_taken");
@@ -73,6 +94,7 @@ async function addStreamer(socketId, doc) {
     }
   } catch (err) {
     console.log(err);
+    return return_error("Something went wrong with addStreamer", err);
   }
 }
 
@@ -87,20 +109,35 @@ async function getUserByUsername(username) {
     return userDoc;
   } catch (err) {
     console.log(err);
+    return return_error("Something went wrong with getUserByUsername", err);
+  }
+}
+
+async function getUserById(id) {
+  try {
+    const userDoc = await db.get(id);
+    return userDoc;
+  } catch (err) {
+    console.log(err);
+    return return_error("Something went wrong with getUserById", err);
   }
 }
 
 // TODO Write an update function, to update settings
-async function updateStreamer(updateInfo, doc) {
-  console.log(doc);
-  return db
-    .upsert(doc._id, function (updateInfo) {
-      if (doc.username != updateInfo) {
-        doc.username = updateInfo;
-        return doc;
-      }
-    })
-    .then((res) => {});
+// currently just overwriting existing doc
+async function updateStreamer(updateObj) {
+  // can only update existing entries
+  try {
+    let userDoc = await db.get(updateObj._id);
+    console.log(userDoc);
+    return db.upsert(userDoc._id, function () {
+      console.log(userDoc);
+      return updateObj;
+    });
+  } catch (err) {
+    console.log(err);
+    return return_error("Error in updateStreamer", err);
+  }
 }
 
 // display all information of all streamers
@@ -112,15 +149,25 @@ async function showAll() {
     console.dir(wholeDB.rows, { depth: 4 });
   } catch (err) {
     console.log(err);
+    return return_error("Something went wrong with showAll", err);
   }
 }
 
 // SUGAR version
 async function testDB() {
   try {
+    // creating a new dummy user
     const streamer1 = await addStreamer("r4nd0mS0ck371d", streamer);
+    // grab the streamer doc
+    const strdoc = await getUserById(streamer1.data.id);
+    // update the streamer doc
+    const updatedStreamer = await updateStreamer(streamer3);
+    console.log(updatedStreamer);
+    const strmr = await getUserById(updatedStreamer.id);
+    console.log(strmr);
   } catch (err) {
     console.log(err);
+    return return_error("Something went wrong with testDB", err);
   }
 }
 testDB();
