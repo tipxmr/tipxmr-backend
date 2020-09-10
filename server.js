@@ -29,10 +29,6 @@ function onStreamerInfo(socket, streamerInfo) {
   //addStreamer(socket.id, streamerInfo);
 }
 
-function onStreamerDisconnectOrTimeout(socket) {
-  streamerDisconnectOrTimeout(socket);
-}
-
 // ===============================================================
 // Donator Namespace
 // ===============================================================
@@ -45,7 +41,7 @@ donatorNamespace.on("connection", (socket) => {
 
   // donator disconnects
   socket.on("disconnect", () => {
-    donatorDisconnectOrTimeout(socket);
+    onDonatorDisconnectOrTimeout(socket);
   });
 });
 
@@ -64,7 +60,7 @@ function onGetSubaddress(data) {
   }
 }
 
-function streamerDisconnectOrTimeout(socket) {
+function onStreamerDisconnectOrTimeout(socket) {
   const disconnectedStreamer = Object.values(streamers).find((streamer) => {
     return streamer.streamerSocketId === socket.id;
   });
@@ -80,6 +76,6 @@ function streamerDisconnectOrTimeout(socket) {
   }
 }
 
-function donatorDisconnectOrTimeout(socket) {
+function onDonatorDisconnectOrTimeout(socket) {
   console.log("disconnected Donator (" + socket.id + ")");
 }
