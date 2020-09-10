@@ -1,27 +1,53 @@
-var socketio = require("./socket");
-var PouchDB = require("pouchdb");
-PouchDB.plugin(require("pouchdb-adapter-memory"));
-//var pouch = new PouchDB("streamers", { adapter: "memory" });
+const io = require("socket.io")(3000, { origins: "*:*" });
+const streamerNamespace = io.of("/streamer");
+const donatorNamespace = io.of("/donator");
+const db = require("./db");
 
 let streamers = {};
 
-function onDisconnectOrTimeout(socket) {
-  console.log("streamers", streamers);
-  const disconnectedStreamer = Object.values(streamers).find((streamer) => {
-    console.log("streamer", streamer);
-    return streamer.streamerSocketId === socket.id;
-  });
-  console.log("disconnectedStreamer", disconnectedStreamer); // always undefined?
-  if (disconnectedStreamer !== undefined) {
-    streamers[disconnectedStreamer.streamerName].online = false;
-    console.log(
-      "streamer: " +
-        streamers[disconnectedStreamer.streamerName].streamerName +
-        " disconnected"
-    );
-  }
+// ===============================================================
+// Streamer Namespace
+// ===============================================================
+
+streamerNamespace.on("connection", (socket) => {
+  // streamer sends info
+  socket.on("streamerInfo", (streamerInfo) =>
+    onStreamerInfo(socket, streamerInfo)
+  );
+
+  // streamer return subaddress
+  socket.on("returnSubaddress", (data) => {});
+
+  // streamer wallet recieved donation
+  socket.on("paymentRecieved", (data) => {});
+
+  // streamer disconnects
+  socket.on("disconnect", () => onStreamerDisconnectOrTimeout(socket));
+});
+
+// callbacks streamer
+function onStreamerInfo(streamerInfo) {
+  db.addStreamer(socket.id, streamerInfo);
+  //addStreamer(socket.id, streamerInfo);
 }
 
+function onStreamerDisconnectOrTimeout(socket) {
+  onStreamerDisconnectOrTimeout(socket);
+}
+
+// ===============================================================
+// Donator Namespace
+// ===============================================================
+
+donatorNamespace.on("connection", (socket) => {
+  // donator requests Subaddress
+  socket.on("getSubaddress", (data) => {});
+
+  // donator disconnects
+  socket.on("disconnect", () => {});
+});
+
+// all functions
 function addStreamer(socketId, streamerInfo) {
   const existingStreamer = streamers[streamerInfo.streamerName];
   // if Streamer existits, update streamer id, if socketId differs
@@ -46,41 +72,19 @@ function addStreamer(socketId, streamerInfo) {
   }
 }
 
-io.on("connect", (socket) => {
-  // Streamer connects
-  socket.on("streamerInfo", (streamerInfo) => {
-    addStreamer(socket.id, streamerInfo);
+function onStreamerDisconnectOrTimeout(socket) {
+  console.log("streamers", streamers);
+  const disconnectedStreamer = Object.values(streamers).find((streamer) => {
+    console.log("streamer", streamer);
+    return streamer.streamerSocketId === socket.id;
   });
-
-  // donator requests Subaddress
-  socket.on("getSubaddress", (data) => {
+  console.log("disconnectedStreamer", disconnectedStreamer); // always undefined?
+  if (disconnectedStreamer !== undefined) {
+    streamers[disconnectedStreamer.streamerName].online = false;
     console.log(
-      data.donor + " requested subaddress of streamer: " + data.streamerName
+      "streamer: " +
+        streamers[disconnectedStreamer.streamerName].streamerName +
+        " disconnected"
     );
-    const requestedStreamer = streamers[data.streamerName];
-    if (requestedStreamer !== undefined && requestedStreamer.online === true) {
-      // add socketID to data object, so the backend knows where to send the subaddress
-      data.donatorSocketId = socket.id;
-      // backend relays request to specific streamer
-      io.to(requestedStreamer.streamerSocketId).emit("getSubaddress", data);
-    } else {
-      io.to(socket.id).emit(
-        "returnSubaddress",
-        "Streamer not found or not online"
-      );
-    }
-  });
-
-  // streamer returns subaddress
-  socket.on("returnSubaddress", (data) => {
-    console.log("Subaddress", data.subaddress);
-    io.to(data.donatorSocketId).emit("returnSubaddress", data);
-  });
-
-  socket.on("disconnect", () => onDisconnectOrTimeout(socket));
-
-  // streamer wallet recieved donation
-  socket.on("paymentRecieved", (data) => {
-    console.dir(data);
-  });
-});
+  }
+}
