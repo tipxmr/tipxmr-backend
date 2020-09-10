@@ -29,10 +29,11 @@ let streamer = {
     goalprogress: 0,
     goalreached: false,
     charlimit: 1000,
-    // sound: "/src/sounds/crocodile.mp3",
+    sound: "/src/sounds/crocodile.mp3",
   },
 };
 
+// return code masks
 function return_success(message, data = {}) {
   return {
     type: "success",
@@ -49,31 +50,44 @@ function return_error(message, error = {}) {
   };
 }
 
+// ===============================================================
+// Donator Namespace
+// ===============================================================
+
+// add a new streamer (register process), username needs to be unique
+// SUGAR version
 async function addStreamer(socketId, doc) {
-  return getUserByUsername(doc.username).then((res) => {
-    if (res.length > 0) {
+  try {
+    // step 1: try to get the user with the username
+    const userDoc = await getUserByUsername(doc.username);
+    console.log(userDoc);
+    if (userDoc.docs.length > 0) {
       console.log(doc.username + " is taken");
       return return_error("username_taken");
     } else {
+      // step 2: if there is nobody with that username, create the object in the db
       doc.streamerSocketId = socketId;
+      const newStreamer = await db.putIfNotExists(doc);
       console.log(doc.username + " successfully created");
-      return db.putIfNotExists(doc);
+      return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
-  });
+  } catch (err) {
+    console.log(err);
+  }
 }
 
+// given a username, return the doc object of said user
 async function getUserByUsername(username) {
-  return db.find({
-    selector: {
-      username: { $eq: username },
-    },
-  });
-}
-
-async function printUser(username) {
-  return getUser(username).then((res) => {
-    console.log(res);
-  });
+  try {
+    const userDoc = await db.find({
+      selector: {
+        username: { $eq: username.toLowerCase() }, // make sure the username is lowercase
+      },
+    });
+    return userDoc;
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 // TODO Write an update function, to update settings
@@ -90,34 +104,25 @@ async function updateStreamer(updateInfo, doc) {
 }
 
 // display all information of all streamers
+// SUGAR version
 async function showAll() {
-  return db
-    .allDocs({ include_docs: true })
-    .then(function (e) {
-      console.dir(e.rows, { depth: 4 });
-    })
-    .catch(function (_err) {
-      console.log(_err);
-    });
+  try {
+    const wholeDB = await db.allDocs({ include_docs: true });
+    console.log("here is the entire DB");
+    console.dir(wholeDB.rows, { depth: 4 });
+  } catch (err) {
+    console.log(err);
+  }
 }
 
+// SUGAR version
 async function testDB() {
-  return (
-    addStreamer("r4nd0mS0ck371d", streamer)
-      .then((res) => {
-        return db.get(res.id);
-      })
-      .then((res) => {
-        updateStreamer("test", streamer);
-      })
-      // .then((res) => {
-      //   printUser(res.username);
-      // })
-      .catch(function (_err) {
-        console.log(_err);
-      })
-  );
+  try {
+    const streamer1 = await addStreamer("r4nd0mS0ck371d", streamer);
+  } catch (err) {
+    console.log(err);
+  }
 }
 testDB();
 
-module.exports = [addStreamer, getUserByUsername, updateStreamer, showAll];
+// module.exports = [addStreamer, getUserByUsername, updateStreamer, showAll];
