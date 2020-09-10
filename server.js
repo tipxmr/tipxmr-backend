@@ -26,7 +26,7 @@ streamerNamespace.on("connection", (socket) => {
 });
 
 // callbacks streamer
-function onStreamerInfo(streamerInfo) {
+function onStreamerInfo(socket, streamerInfo) {
   db.addStreamer(socket.id, streamerInfo);
   //addStreamer(socket.id, streamerInfo);
 }

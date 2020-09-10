@@ -49,19 +49,20 @@ function return_error(message, error = {}) {
   };
 }
 
-async function addStreamer(doc) {
-  return getUser(doc.username).then((res) => {
+async function addStreamer(socketId, doc) {
+  return getUserByUsername(doc.username).then((res) => {
     if (res.length > 0) {
       console.log(doc.username + " is taken");
       return return_error("username_taken");
     } else {
+      doc.streamerSocketId = socketId;
       console.log(doc.username + " successfully created");
       return db.putIfNotExists(doc);
     }
   });
 }
 
-async function getUser(username) {
+async function getUserByUsername(username) {
   return db.find({
     selector: {
       username: { $eq: username },
@@ -102,7 +103,7 @@ async function showAll() {
 
 async function testDB() {
   return (
-    addStreamer(streamer)
+    addStreamer("r4nd0mS0ck371d", streamer)
       .then((res) => {
         return db.get(res.id);
       })
@@ -119,4 +120,4 @@ async function testDB() {
 }
 testDB();
 
-module.exports = [addStreamer, getUser, updateStreamer, showAll];
+module.exports = [addStreamer, getUserByUsername, updateStreamer, showAll];
