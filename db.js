@@ -30,10 +30,32 @@ let streamer = {
     goalprogress: 0,
     goalreached: false,
     charlimit: 1000,
-    // sound: "/src/sounds/crocodile.mp3",
+    sound: "/src/sounds/crocodile.mp3",
+  },
+};
+let streamer2 = {
+  _id: hashedSeed,
+  username: streamerName.toLowerCase(),
+  displayName: streamerName,
+  account: {
+    basic: false,
+    advanced: false,
+    premium: false,
+  },
+  stream: {
+    secondprice: 0.00043,
+    fontcolor: "#F23456",
+    minamount: 0.00043,
+    gifs: true,
+    goal: 1,
+    goalprogress: 0,
+    goalreached: false,
+    charlimit: 1000,
+    sound: "/src/sounds/crocodile.mp3",
   },
 };
 
+// return code masks
 function return_success(message, data = {}) {
   return {
     type: "success",
@@ -50,76 +72,89 @@ function return_error(message, error = {}) {
   };
 }
 
+// ===============================================================
+// Donator Namespace
+// ===============================================================
+
+// add a new streamer (register process), username needs to be unique
+// SUGAR version
 async function addStreamer(socketId, doc) {
-  return getStreamerByUsername(doc.username).then((res) => {
-    if (res.length > 0) {
+  try {
+    // step 1: try to get the user with the username
+    const userDoc = await getStreamerByUsername(doc.username);
+    // console.log(userDoc);
+    if (userDoc.docs.length > 0) {
       console.log(doc.username + " is taken");
       return return_error("username_taken");
     } else {
+      // step 2: if there is nobody with that username, create the object in the db
       doc.streamerSocketId = socketId;
       doc.online = true;
+      const newStreamer = await db.putIfNotExists(doc);
       console.log(doc.username + " successfully created");
-      return db.putIfNotExists(doc);
+      return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
-  });
+  } catch (err) {
+    console.log(err);
+    return return_error("Something went wrong with addStreamer", err);
+  }
 }
 
+// given a username, return the doc object of said user
 async function getStreamerByUsername(username) {
-  return db.find({
-    selector: {
-      username: { $eq: username },
-    },
-  });
+  try {
+    const userDoc = await db.find({
+      selector: {
+        username: { $eq: username.toLowerCase() }, // make sure the username is lowercase
+      },
+    });
+    return userDoc;
+  } catch (err) {
+    console.log(err);
+    return return_error("Something went wrong with getUserByUsername", err);
+  }
 }
 
-async function printUser(username) {
-  return getUser(username).then((res) => {
-    console.log(res);
-  });
+async function getStreamerById(id) {
+  try {
+    const userDoc = await db.get(id);
+    return userDoc;
+  } catch (err) {
+    console.log(err);
+    return return_error("Something went wrong with getStreamerById", err);
+  }
 }
 
 // TODO Write an update function, to update settings
-async function updateStreamer(updateInfo, doc) {
-  console.log(doc);
-  return db
-    .upsert(doc._id, function (updateInfo) {
-      if (doc.username != updateInfo) {
-        doc.username = updateInfo;
-        return doc;
-      }
-    })
-    .then((res) => {});
+// currently just overwriting existing doc
+async function updateStreamer(updateObj) {
+  // can only update existing entries
+  try {
+    let userDoc = await db.get(updateObj._id);
+    console.log(userDoc);
+    return db.upsert(userDoc._id, function () {
+      console.log(userDoc);
+      return updateObj;
+    });
+  } catch (err) {
+    console.log(err);
+    return return_error("Error in updateStreamer", err);
+  }
 }
 
 // display all information of all streamers
+// SUGAR version
 async function showAll() {
-  return db
-    .allDocs({ include_docs: true })
-    .then(function (e) {
-      console.dir(e.rows, { depth: 4 });
-    })
-    .catch(function (_err) {
-      console.log(_err);
-    });
+  try {
+    const wholeDB = await db.allDocs({ include_docs: true });
+    console.log("here is the entire DB");
+    console.dir(wholeDB.rows, { depth: 4 });
+  } catch (err) {
+    console.log(err);
+    return return_error("Something went wrong with showAll", err);
+  }
 }
 
-async function testDB() {
-  return (
-    addStreamer("r4nd0mS0ck371d", streamer)
-      .then((res) => {
-        return db.get(res.id);
-      })
-      .then((res) => {
-        updateStreamer("test", streamer);
-      })
-      // .then((res) => {
-      //   printUser(res.username);
-      // })
-      .catch(function (_err) {
-        console.log(_err);
-      })
-  );
-}
-testDB();
 
 module.exports = [addStreamer, getStreamerByUsername, updateStreamer, showAll];
+
