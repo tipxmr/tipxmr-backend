@@ -15,6 +15,7 @@ let streamer = {
   _id: hashedSeed,
   username: streamerName.toLowerCase(),
   displayName: streamerName,
+  online: false,
   account: {
     basic: true,
     advanced: true,
@@ -80,7 +81,7 @@ function return_error(message, error = {}) {
 async function addStreamer(socketId, doc) {
   try {
     // step 1: try to get the user with the username
-    const userDoc = await getUserByUsername(doc.username);
+    const userDoc = await getStreamerByUsername(doc.username);
     // console.log(userDoc);
     if (userDoc.docs.length > 0) {
       console.log(doc.username + " is taken");
@@ -88,6 +89,7 @@ async function addStreamer(socketId, doc) {
     } else {
       // step 2: if there is nobody with that username, create the object in the db
       doc.streamerSocketId = socketId;
+      doc.online = true;
       const newStreamer = await db.putIfNotExists(doc);
       console.log(doc.username + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
@@ -99,7 +101,7 @@ async function addStreamer(socketId, doc) {
 }
 
 // given a username, return the doc object of said user
-async function getUserByUsername(username) {
+async function getStreamerByUsername(username) {
   try {
     const userDoc = await db.find({
       selector: {
@@ -113,13 +115,13 @@ async function getUserByUsername(username) {
   }
 }
 
-async function getUserById(id) {
+async function getStreamerById(id) {
   try {
     const userDoc = await db.get(id);
     return userDoc;
   } catch (err) {
     console.log(err);
-    return return_error("Something went wrong with getUserById", err);
+    return return_error("Something went wrong with getStreamerById", err);
   }
 }
 
@@ -153,23 +155,6 @@ async function showAll() {
   }
 }
 
-// SUGAR version
-async function testDB() {
-  try {
-    // creating a new dummy user
-    const streamer1 = await addStreamer("r4nd0mS0ck371d", streamer);
-    // grab the streamer doc
-    const strdoc = await getUserById(streamer1.data.id);
-    // update the streamer doc
-    const updatedStreamer = await updateStreamer(streamer3);
-    console.log(updatedStreamer);
-    const strmr = await getUserById(updatedStreamer.id);
-    console.log(strmr);
-  } catch (err) {
-    console.log(err);
-    return return_error("Something went wrong with testDB", err);
-  }
-}
-testDB();
 
-// module.exports = [addStreamer, getUserByUsername, updateStreamer, showAll];
+module.exports = [addStreamer, getStreamerByUsername, updateStreamer, showAll];
+

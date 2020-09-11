@@ -14,7 +14,9 @@ streamerNamespace.on("connection", (socket) => {
   );
 
   // streamer return subaddress
-  socket.on("returnSubaddress", (data) => {});
+  socket.on("returnSubaddress", (data) => {
+    onStreamerReturnsSubaddress(data);
+  });
 
   // streamer wallet recieved donation
   socket.on("paymentRecieved", (data) => {});
@@ -23,54 +25,34 @@ streamerNamespace.on("connection", (socket) => {
   socket.on("disconnect", () => onStreamerDisconnectOrTimeout(socket));
 });
 
-// callbacks streamer
-function onStreamerInfo(socket, streamerInfo) {
-  db.addStreamer(socket.id, streamerInfo);
-  //addStreamer(socket.id, streamerInfo);
-}
-
-function onStreamerDisconnectOrTimeout(socket) {
-  onStreamerDisconnectOrTimeout(socket);
-}
-
 // ===============================================================
 // Donator Namespace
 // ===============================================================
 
 donatorNamespace.on("connection", (socket) => {
   // donator requests Subaddress
-  socket.on("getSubaddress", (data) => {});
+  socket.on("getSubaddress", (data) => {
+    onGetSubaddress(data);
+  });
 
   // donator disconnects
-  socket.on("disconnect", () => {});
+  socket.on("disconnect", () => {
+    onDonatorDisconnectOrTimeout(socket);
+  });
 });
 
 // ===============================================================
 // All Functions
 // ===============================================================
 
-function addStreamer(socketId, streamerInfo) {
-  const existingStreamer = streamers[streamerInfo.streamerName];
-  // if Streamer existits, update streamer id, if socketId differs
-  if (existingStreamer !== undefined) {
-    if (existingStreamer.streamerSocketId !== socketId) {
-      streamers[streamerInfo.streamerName].streamerSocketId = socketId;
-      streamers[streamerInfo.streamerName].online = true;
-      console.log(
-        "Updated SocketID of existing streamer: " +
-          existingStreamer.streamerName
-      );
-    }
-  } else {
-    // new streamer added
-    streamers[streamerInfo.streamerName] = {
-      streamerSocketId: socketId,
-      streamerName: streamerInfo.streamerName,
-      hashedSeed: streamerInfo.hashedSeed,
-      online: true,
-    };
-    console.log("Added new streamer: " + streamerInfo.streamerName);
-  }
+// callbacks streamer
+function onStreamerInfo(socket, streamerInfo) {
+  db.addStreamer(socket.id, streamerInfo);
+}
+
+function onStreamerReturnsSubaddress(data) {
+  console.log("Subaddress", data.subaddress);
+  io.to(data.donatorSocketId).emit("returnSubaddress", data);
 }
 
 function onStreamerDisconnectOrTimeout(socket) {
@@ -89,6 +71,18 @@ function onStreamerDisconnectOrTimeout(socket) {
   }
 }
 
+// donator callbacks
+function onGetSubaddress(data) {
+  console.log(
+    data.donor + " requested subaddress of streamer: " + data.streamerName
+  );
+  const requestedStreamer = db.getStreamerByUsername(data.username);
+  if (requestedStreamer !== undefined && requestedStreamer.online === true) {
+    // add socketID to data object, so the backend knows where to send the subaddress
+    data.donatorSocketId = socket.id;
+  }
+}
+
 function onDonatorDisconnectOrTimeout(socket) {
-  console.log("disconnected Donator (" + socket.id + ")");
+  console.log("donator (" + socket.id + ") disconnected");
 }
