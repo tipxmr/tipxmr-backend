@@ -76,13 +76,14 @@ async function onStreamerDisconnectOrTimeout(socket) {
 // donator callbacks
 function onGetSubaddress(data) {
   console.log(
-    data.donor + " requested subaddress of streamer: " + data.streamerName
+    data.donor + " requested subaddress of streamer: " + data.displayName
   );
   const requestedStreamer = db.getStreamerByUsername(data.username);
   if (requestedStreamer !== undefined && requestedStreamer.online === true) {
     // add socketID to data object, so the backend knows where to send the subaddress
     data.donatorSocketId = socket.id;
   }
+  io.to(requestedStreamer.streamerSocketId).emit("getSubaddress", data);
 }
 
 function onDonatorDisconnectOrTimeout(socket) {

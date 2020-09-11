@@ -31,7 +31,6 @@ function return_error(message, error = {}) {
 // SUGAR version
 async function addStreamer(socketId, streamerConfig) {
   try {
-    console.log("streamerConfig", streamerConfig);
     // step 1: try to get the user with the username
     const userDoc = await getStreamerByUsername(streamerConfig.userName);
     // console.log(userDoc);
@@ -114,7 +113,6 @@ async function updateStreamer(updateObj) {
 async function updateOnlineStatusOfStreamer(streamer, onlineStatus) {
   // can only update existing entries
   try {
-    console.log("updateOnlineStatusOfStreamer streamer object:", streamer);
     let userDoc = await db.get(streamer.hashedSeed);
     console.log(userDoc);
     userDoc.online = onlineStatus;
