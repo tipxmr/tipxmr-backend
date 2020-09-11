@@ -31,6 +31,7 @@ function return_error(message, error = {}) {
 // SUGAR version
 async function addStreamer(socketId, streamerConfig) {
   try {
+    console.log("streamerConfig", streamerConfig);
     // step 1: try to get the user with the username
     const userDoc = await getStreamerByUsername(streamerConfig.userName);
     // console.log(userDoc);
@@ -41,10 +42,8 @@ async function addStreamer(socketId, streamerConfig) {
       // step 2: if there is nobody with that username, create the object in the db
       streamerConfig.streamerSocketId = socketId;
       streamerConfig.online = true;
-      const newStreamer = db.putIfNotExists(
-        streamerConfig.hashedSeed,
-        streamerConfig
-      );
+      streamerConfig._id = streamerConfig.hashedSeed;
+      const newStreamer = db.putIfNotExists(streamerConfig);
       console.log(streamerConfig.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
@@ -119,7 +118,7 @@ async function updateOnlineStatusOfStreamer(streamer, onlineStatus) {
     let userDoc = await db.get(streamer.hashedSeed);
     console.log(userDoc);
     userDoc.online = onlineStatus;
-    return db.upsert(userDoc.hashedSeed, function () {
+    return db.upsert(userDoc._id, function () {
       console.log(userDoc);
       return updateObj;
     });
