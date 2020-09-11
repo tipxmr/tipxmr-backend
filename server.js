@@ -64,11 +64,9 @@ function onStreamerReturnsSubaddress(data) {
 function onStreamerDisconnectOrTimeout(socket) {
   const disconnectedStreamer = db.getStreamerBySocketId(socket.id);
   if (disconnectedStreamer !== null) {
-    updateOnlineStatusOfStreamer(disconnectedStreamer, false);
+    db.updateOnlineStatusOfStreamer(disconnectedStreamer, false);
     console.log(
-      "streamer: " +
-        streamers[disconnectedStreamer.streamerName].streamerName +
-        " disconnected"
+      "streamer: " + disconnectedStreamer.displayName + " disconnected"
     );
   } else {
     console.log("Undefined streamer disconnected");

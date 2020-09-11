@@ -41,7 +41,7 @@ async function addStreamer(socketId, doc) {
       // step 2: if there is nobody with that username, create the object in the db
       doc.streamerSocketId = socketId;
       doc.online = true;
-      const newStreamer = await db.putIfNotExists(doc);
+      const newStreamer = await db.putIfNotExists(doc.id, doc);
       console.log(doc.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
@@ -56,7 +56,7 @@ async function getStreamerByUsername(username) {
   try {
     const userDoc = await db.find({
       selector: {
-        username: { $eq: username.toLowerCase() }, // make sure the username is lowercase
+        username: { $eq: username }, // make sure the username is lowercase
       },
     });
     return userDoc;
@@ -138,7 +138,7 @@ async function showAll() {
   }
 }
 
-module.exports = [
+module.exports = {
   addStreamer,
   getStreamerById,
   getStreamerByUsername,
@@ -146,4 +146,4 @@ module.exports = [
   updateStreamer,
   updateOnlineStatusOfStreamer,
   showAll,
-];
+};
