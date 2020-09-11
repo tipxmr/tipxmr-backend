@@ -29,24 +29,27 @@ function return_error(message, error = {}) {
 
 // add a new streamer (register process), username needs to be unique
 // SUGAR version
-async function addStreamer(socketId, doc) {
+async function addStreamer(socketId, streamerConfig) {
   try {
     // step 1: try to get the user with the username
-    const userDoc = await getStreamerByUsername(doc.userName);
+    const userDoc = await getStreamerByUsername(streamerConfig.userName);
     // console.log(userDoc);
     if (userDoc.docs.length > 0) {
-      console.log(doc.userName + " is taken");
+      console.log(streamerConfig.userName + " is taken");
       return return_error("username_taken");
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      doc.streamerSocketId = socketId;
-      doc.online = true;
-      const newStreamer = await db.putIfNotExists(doc.id, doc);
-      console.log(doc.userName + " successfully created");
+      streamerConfig.streamerSocketId = socketId;
+      streamerConfig.online = true;
+      const newStreamer = db.putIfNotExists(
+        streamerConfig.hashedSeed,
+        streamerConfig
+      );
+      console.log(streamerConfig.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with addStreamer", err);
     return return_error("Something went wrong with addStreamer", err);
   }
 }
@@ -61,7 +64,7 @@ async function getStreamerByUsername(username) {
     });
     return userDoc;
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with getUserByUsername", err);
     return return_error("Something went wrong with getUserByUsername", err);
   }
 }
@@ -86,7 +89,7 @@ async function getStreamerBySocketId(socketId) {
     });
     return userDoc;
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with getStreamerBySocketId", err);
     return return_error("Something went wrong with getStreamerBySocketId", err);
   }
 }
@@ -103,24 +106,25 @@ async function updateStreamer(updateObj) {
       return updateObj;
     });
   } catch (err) {
-    console.log(err);
+    console.log("Error in updateStreamer", err);
     return return_error("Error in updateStreamer", err);
   }
 }
 
 // update online status of streamer
-async function updateOnlineStatusOfStreamer(updateObj, onlineStatus) {
+async function updateOnlineStatusOfStreamer(streamer, onlineStatus) {
   // can only update existing entries
   try {
-    let userDoc = await db.get(updateObj._id);
+    console.log("updateOnlineStatusOfStreamer streamer object:", streamer);
+    let userDoc = await db.get(streamer.hashedSeed);
     console.log(userDoc);
     userDoc.online = onlineStatus;
-    return db.upsert(userDoc._id, function () {
+    return db.upsert(userDoc.hashedSeed, function () {
       console.log(userDoc);
       return updateObj;
     });
   } catch (err) {
-    console.log(err);
+    console.log("Error in updateOnlineStatusOfStreamer", err);
     return return_error("Error in updateOnlineStatusOfStreamer", err);
   }
 }
@@ -133,7 +137,7 @@ async function showAll() {
     console.log("here is the entire DB");
     console.dir(wholeDB.rows, { depth: 4 });
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with showAll", err);
     return return_error("Something went wrong with showAll", err);
   }
 }

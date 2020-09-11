@@ -61,8 +61,8 @@ function onStreamerReturnsSubaddress(data) {
   io.to(data.donatorSocketId).emit("returnSubaddress", data);
 }
 
-function onStreamerDisconnectOrTimeout(socket) {
-  const disconnectedStreamer = db.getStreamerBySocketId(socket.id);
+async function onStreamerDisconnectOrTimeout(socket) {
+  const disconnectedStreamer = await db.getStreamerBySocketId(socket.id);
   if (disconnectedStreamer !== null) {
     db.updateOnlineStatusOfStreamer(disconnectedStreamer, false);
     console.log(
