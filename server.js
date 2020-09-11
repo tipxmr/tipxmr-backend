@@ -8,6 +8,9 @@ const db = require("./db");
 // ===============================================================
 
 streamerNamespace.on("connection", (socket) => {
+  // streamer requests config at login by giving his hashedSeed
+  socket.on("getStreamerConfig", (hashedSeed) => {});
+
   // streamer sends info
   socket.on("streamerInfo", (streamerInfo) =>
     onStreamerInfo(socket, streamerInfo)
@@ -23,6 +26,9 @@ streamerNamespace.on("connection", (socket) => {
 
   // streamer disconnects
   socket.on("disconnect", () => onStreamerDisconnectOrTimeout(socket));
+
+  // streamer changes his config, update db
+  socket.on("updateConfig", (config) => {});
 });
 
 // ===============================================================
@@ -56,11 +62,9 @@ function onStreamerReturnsSubaddress(data) {
 }
 
 function onStreamerDisconnectOrTimeout(socket) {
-  const disconnectedStreamer = Object.values(streamers).find((streamer) => {
-    return streamer.streamerSocketId === socket.id;
-  });
-  if (disconnectedStreamer !== undefined) {
-    streamers[disconnectedStreamer.streamerName].online = false;
+  const disconnectedStreamer = db.getStreamerBySocketId(socket.id);
+  if (disconnectedStreamer !== null) {
+    updateOnlineStatusOfStreamer(disconnectedStreamer, false);
     console.log(
       "streamer: " +
         streamers[disconnectedStreamer.streamerName].streamerName +
