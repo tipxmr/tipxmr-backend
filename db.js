@@ -40,7 +40,7 @@ async function addStreamer(socketId, streamerConfig) {
     } else {
       // step 2: if there is nobody with that username, create the object in the db
       streamerConfig.streamerSocketId = socketId;
-      streamerConfig.online = true;
+      streamerConfig.isOnline = true;
       streamerConfig._id = streamerConfig.hashedSeed;
       const newStreamer = db.putIfNotExists(streamerConfig);
       console.log(streamerConfig.userName + " successfully created");
@@ -53,13 +53,14 @@ async function addStreamer(socketId, streamerConfig) {
 }
 
 // given a username, return the doc object of said user
-async function getStreamerByUsername(username) {
+async function getStreamerByUsername(userName) {
   try {
     const userDoc = await db.find({
       selector: {
-        username: { $eq: username }, // make sure the username is lowercase
+        userName: { $eq: userName }, // make sure the userName is lowercase
       },
     });
+    console.log("searched and this is my userDoc", userDoc);
     return userDoc;
   } catch (err) {
     console.log("Something went wrong with getUserByUsername", err);
@@ -115,7 +116,7 @@ async function updateOnlineStatusOfStreamer(streamer, onlineStatus) {
   try {
     let userDoc = await db.get(streamer.hashedSeed);
     console.log(userDoc);
-    userDoc.online = onlineStatus;
+    userDoc.isOnline = onlineStatus;
     return db.upsert(userDoc._id, function () {
       console.log(userDoc);
       return updateObj;

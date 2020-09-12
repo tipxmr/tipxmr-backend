@@ -36,6 +36,11 @@ streamerNamespace.on("connection", (socket) => {
 // ===============================================================
 
 donatorNamespace.on("connection", (socket) => {
+  // donator requestes info about streamer
+  socket.on("getStreamer", (streamer) => {
+    onGetStreamer(socket.id, streamer);
+  });
+
   // donator requests Subaddress
   socket.on("getSubaddress", (data) => {
     onGetSubaddress(data);
@@ -76,6 +81,27 @@ async function onStreamerDisconnectOrTimeout(socket) {
 }
 
 // donator callbacks
+async function onGetStreamer(donatorSocketId, userName) {
+  console.log(
+    "Donator (" +
+      donatorSocketId +
+      ") requested streamer info from " +
+      userName +
+      "."
+  );
+  const requestedStreamer = await db.getStreamerByUsername(userName);
+  console.log("requestedStreamer", requestedStreamer);
+  // strip down relevant information for donator
+  const returnStreamerToDonator = {
+    userName: requestedStreamer.docs[0].userName,
+    displayName: requestedStreamer.docs[0].displayName,
+    hashedSeed: requestedStreamer.docs[0].hashedSeed,
+    isOnline: requestedStreamer.docs[0].isOnline,
+  };
+  console.log("returnStreamerToDonator", returnStreamerToDonator);
+  io.to(donatorSocketId).emit("recieveStreamer", returnStreamerToDonator);
+}
+
 async function onGetSubaddress(data) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
@@ -84,7 +110,7 @@ async function onGetSubaddress(data) {
   const requestedStreamer = await db.getStreamerByUsername(data.userName);
   console.log("Requestes Streamer: ");
   console.dir(requestedStreamer);
-  if (requestedStreamer !== undefined && requestedStreamer.online === true) {
+  if (requestedStreamer !== undefined && requestedStreamer.isOnline === true) {
     // add socketID to data object, so the backend knows where to send the subaddress
     data.donatorSocketId = socket.id;
   }
