@@ -60,7 +60,7 @@ async function getStreamerByUsername(userName) {
         userName: { $eq: userName }, // make sure the userName is lowercase
       },
     });
-    console.log("searched and this is my userDoc", userDoc);
+    //console.log("searched and this is my userDoc", userDoc);
     return userDoc;
   } catch (err) {
     console.log("Something went wrong with getUserByUsername", err);
