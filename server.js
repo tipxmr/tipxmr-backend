@@ -65,7 +65,7 @@ function onSubaddressToBackend(data) {
   console.log(
     "New subaddress from " + data.displayName + ": " + data.subaddress
   );
-  io.to(data.donatorSocketId).emit("subaddressToDonator", data);
+  streamerNamespace.to(data.donatorSocketId).emit("subaddressToDonator", data);
 }
 
 async function onStreamerDisconnectOrTimeout(socket) {
@@ -90,7 +90,6 @@ async function onGetStreamer(donatorSocketId, userName) {
       "."
   );
   const requestedStreamer = await db.getStreamerByUsername(userName);
-  console.log("requestedStreamer", requestedStreamer);
   // strip down relevant information for donator
   const returnStreamerToDonator = {
     userName: requestedStreamer.docs[0].userName,
@@ -98,23 +97,23 @@ async function onGetStreamer(donatorSocketId, userName) {
     hashedSeed: requestedStreamer.docs[0].hashedSeed,
     isOnline: requestedStreamer.docs[0].isOnline,
   };
-  console.log("returnStreamerToDonator", returnStreamerToDonator);
-  io.to(donatorSocketId).emit("recieveStreamer", returnStreamerToDonator);
+  donatorNamespace
+    .to(donatorSocketId)
+    .emit("recieveStreamer", returnStreamerToDonator);
 }
 
 async function onGetSubaddress(data) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
-  console.log("Data", data);
   const requestedStreamer = await db.getStreamerByUsername(data.userName);
-  console.log("Requestes Streamer: ");
-  console.dir(requestedStreamer);
   if (requestedStreamer !== undefined && requestedStreamer.isOnline === true) {
     // add socketID to data object, so the backend knows where to send the subaddress
     data.donatorSocketId = socket.id;
   }
-  io.to(requestedStreamer.streamerSocketId).emit("createSubaddress", data);
+  donatorNamespace
+    .to(requestedStreamer.streamerSocketId)
+    .emit("createSubaddress", data);
 }
 
 function onDonatorDisconnectOrTimeout(socket) {
