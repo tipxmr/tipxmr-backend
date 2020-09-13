@@ -111,7 +111,7 @@ async function onGetSubaddress(data) {
     // add socketID to data object, so the backend knows where to send the subaddress
     data.donatorSocketId = socket.id;
   }
-  donatorNamespace
+  streamerNamespace
     .to(requestedStreamer.streamerSocketId)
     .emit("createSubaddress", data);
 }
