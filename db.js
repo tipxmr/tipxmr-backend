@@ -6,55 +6,6 @@ PouchDB.plugin(require("pouchdb-adapter-memory"));
 
 let db = new PouchDB("streamers", { adapter: "memory" });
 
-// consts for testing
-let hashedSeed =
-  "lkjadslkfjasdlkfjlksjfdalsdkjf;asdlkfjasdlfjasdlkjfasl;kdfalksfj";
-let streamerName = "SupMan";
-
-let streamer = {
-  _id: hashedSeed,
-  username: streamerName.toLowerCase(),
-  displayName: streamerName,
-  online: false,
-  account: {
-    basic: true,
-    advanced: true,
-    premium: true,
-  },
-  stream: {
-    secondprice: 0.00043,
-    fontcolor: "#F23456",
-    minamount: 0.00043,
-    gifs: true,
-    goal: 1,
-    goalprogress: 0,
-    goalreached: false,
-    charlimit: 1000,
-    sound: "/src/sounds/crocodile.mp3",
-  },
-};
-let streamer2 = {
-  _id: hashedSeed,
-  username: streamerName.toLowerCase(),
-  displayName: streamerName,
-  account: {
-    basic: false,
-    advanced: false,
-    premium: false,
-  },
-  stream: {
-    secondprice: 0.00043,
-    fontcolor: "#F23456",
-    minamount: 0.00043,
-    gifs: true,
-    goal: 1,
-    goalprogress: 0,
-    goalreached: false,
-    charlimit: 1000,
-    sound: "/src/sounds/crocodile.mp3",
-  },
-};
-
 // return code masks
 function return_success(message, data = {}) {
   return {
@@ -73,44 +24,46 @@ function return_error(message, error = {}) {
 }
 
 // ===============================================================
-// Donator Namespace
+// DB operations
 // ===============================================================
 
 // add a new streamer (register process), username needs to be unique
 // SUGAR version
-async function addStreamer(socketId, doc) {
+async function addStreamer(socketId, streamerConfig) {
   try {
     // step 1: try to get the user with the username
-    const userDoc = await getStreamerByUsername(doc.username);
+    const userDoc = await getStreamerByUsername(streamerConfig.userName);
     // console.log(userDoc);
     if (userDoc.docs.length > 0) {
-      console.log(doc.username + " is taken");
+      console.log(streamerConfig.userName + " is taken");
       return return_error("username_taken");
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      doc.streamerSocketId = socketId;
-      doc.online = true;
-      const newStreamer = await db.putIfNotExists(doc);
-      console.log(doc.username + " successfully created");
+      streamerConfig.streamerSocketId = socketId;
+      streamerConfig.isOnline = true;
+      streamerConfig._id = streamerConfig.hashedSeed;
+      const newStreamer = db.putIfNotExists(streamerConfig);
+      console.log(streamerConfig.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with addStreamer", err);
     return return_error("Something went wrong with addStreamer", err);
   }
 }
 
 // given a username, return the doc object of said user
-async function getStreamerByUsername(username) {
+async function getStreamerByUsername(userName) {
   try {
     const userDoc = await db.find({
       selector: {
-        username: { $eq: username.toLowerCase() }, // make sure the username is lowercase
+        userName: { $eq: userName }, // make sure the userName is lowercase
       },
     });
+    //console.log("searched and this is my userDoc", userDoc);
     return userDoc;
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with getUserByUsername", err);
     return return_error("Something went wrong with getUserByUsername", err);
   }
 }
@@ -121,7 +74,22 @@ async function getStreamerById(id) {
     return userDoc;
   } catch (err) {
     console.log(err);
-    return return_error("Something went wrong with getStreamerById", err);
+    return null;
+  }
+}
+
+// given a socketId, return the doc object of said user
+async function getStreamerBySocketId(socketId) {
+  try {
+    const userDoc = await db.find({
+      selector: {
+        socketId: { $eq: socketId }, // make sure the username is lowercase
+      },
+    });
+    return userDoc;
+  } catch (err) {
+    console.log("Something went wrong with getStreamerBySocketId", err);
+    return return_error("Something went wrong with getStreamerBySocketId", err);
   }
 }
 
@@ -137,8 +105,25 @@ async function updateStreamer(updateObj) {
       return updateObj;
     });
   } catch (err) {
-    console.log(err);
+    console.log("Error in updateStreamer", err);
     return return_error("Error in updateStreamer", err);
+  }
+}
+
+// update online status of streamer
+async function updateOnlineStatusOfStreamer(streamer, onlineStatus) {
+  // can only update existing entries
+  try {
+    let userDoc = await db.get(streamer.hashedSeed);
+    console.log(userDoc);
+    userDoc.isOnline = onlineStatus;
+    return db.upsert(userDoc._id, function () {
+      console.log(userDoc);
+      return updateObj;
+    });
+  } catch (err) {
+    console.log("Error in updateOnlineStatusOfStreamer", err);
+    return return_error("Error in updateOnlineStatusOfStreamer", err);
   }
 }
 
@@ -150,11 +135,17 @@ async function showAll() {
     console.log("here is the entire DB");
     console.dir(wholeDB.rows, { depth: 4 });
   } catch (err) {
-    console.log(err);
+    console.log("Something went wrong with showAll", err);
     return return_error("Something went wrong with showAll", err);
   }
 }
 
-
-module.exports = [addStreamer, getStreamerByUsername, updateStreamer, showAll];
-
+module.exports = {
+  addStreamer,
+  getStreamerById,
+  getStreamerByUsername,
+  getStreamerBySocketId,
+  updateStreamer,
+  updateOnlineStatusOfStreamer,
+  showAll,
+};
