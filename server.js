@@ -1,4 +1,8 @@
-const io = require("socket.io")(3000, { origins: "*:*" });
+const app = require("express")();
+const server = require("http").createServer(app);
+const options = { origins: "*:*" };
+const io = require("socket.io")(server, options);
+//const io = require("socket.io")(3000, { origins: "*:*" });
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const db = require("./db");
@@ -9,7 +13,9 @@ const db = require("./db");
 
 streamerNamespace.on("connection", (socket) => {
   // streamer requests config at login by giving his hashedSeed
-  socket.on("getStreamerConfig", (hashedSeed) => {});
+  socket.on("getStreamerConfig", (hashedSeed) => {
+    db.getStreamerById(hashedSeed);
+  });
 
   // streamer sends info
   socket.on("streamerInfo", (streamerInfo) =>
@@ -43,7 +49,7 @@ donatorNamespace.on("connection", (socket) => {
 
   // donator requests Subaddress
   socket.on("getSubaddress", (data) => {
-    onGetSubaddress(data);
+    onGetSubaddress(socket, data);
   });
 
   // donator disconnects
@@ -65,7 +71,7 @@ function onSubaddressToBackend(data) {
   console.log(
     "New subaddress from " + data.displayName + ": " + data.subaddress
   );
-  streamerNamespace.to(data.donatorSocketId).emit("subaddressToDonator", data);
+  donatorNamespace.to(data.donatorSocketId).emit("subaddressToDonator", data);
 }
 
 async function onStreamerDisconnectOrTimeout(socket) {
@@ -102,20 +108,25 @@ async function onGetStreamer(donatorSocketId, userName) {
     .emit("recieveStreamer", returnStreamerToDonator);
 }
 
-async function onGetSubaddress(data) {
+async function onGetSubaddress(socket, data) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
   const requestedStreamer = await db.getStreamerByUsername(data.userName);
-  if (requestedStreamer !== undefined && requestedStreamer.isOnline === true) {
-    // add socketID to data object, so the backend knows where to send the subaddress
+  if (
+    requestedStreamer.docs[0] !== undefined &&
+    requestedStreamer.docs[0].isOnline === true
+  ) {
+    // add socketID to data object, so the streamer and the backend know where to send the subaddress
     data.donatorSocketId = socket.id;
+    streamerNamespace
+      .to(requestedStreamer.docs[0].streamerSocketId)
+      .emit("createSubaddress", data);
   }
-  streamerNamespace
-    .to(requestedStreamer.streamerSocketId)
-    .emit("createSubaddress", data);
 }
 
 function onDonatorDisconnectOrTimeout(socket) {
   console.log("donator (" + socket.id + ") disconnected");
 }
+
+server.listen(3000);

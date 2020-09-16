@@ -70,8 +70,7 @@ async function getStreamerByUsername(userName) {
 
 async function getStreamerById(id) {
   try {
-    const userDoc = await db.get(id);
-    return userDoc;
+    return await db.get(id);
   } catch (err) {
     console.log(err);
     return null;
