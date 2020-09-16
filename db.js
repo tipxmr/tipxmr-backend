@@ -1,10 +1,14 @@
 // setting up the db
+const { v4: generateUUID } = require("uuid");
 let PouchDB = require("pouchdb");
+
 PouchDB.plugin(require("pouchdb-upsert"));
 PouchDB.plugin(require("pouchdb-find"));
 PouchDB.plugin(require("pouchdb-adapter-memory"));
 
 let db = new PouchDB("streamers", { adapter: "memory" });
+
+const testStreamers = require("./data/streamer");
 
 // return code masks
 function return_success(message, data = {}) {
@@ -139,6 +143,34 @@ async function showAll() {
   }
 }
 
+const where = (selector) => db.find({ selector });
+
+const generateAnimationId = () => generateUUID().split("-").join("");
+
+function populateTestStreamers() {
+  const streamers = testStreamers
+    .filter((testStreamer) => Object.keys(testStreamer).length)
+    .map((testStreamer) => {
+      const animationId = generateAnimationId();
+      console.log(animationId);
+      return {
+        ...testStreamer,
+        animationId,
+      };
+    });
+
+  console.log("Populating test steamer data...");
+  return db
+    .bulkDocs(streamers)
+    .then(() => console.log("success"))
+    .catch(() => console.error("failed"));
+}
+
+const hasStreamingSession = (id) =>
+  where({ animationId: { $eq: id } }).then((result) =>
+    Boolean(result.docs.length)
+  );
+
 module.exports = {
   addStreamer,
   getStreamerById,
@@ -147,4 +179,6 @@ module.exports = {
   updateStreamer,
   updateOnlineStatusOfStreamer,
   showAll,
+  populateTestStreamers,
+  hasStreamingSession,
 };
