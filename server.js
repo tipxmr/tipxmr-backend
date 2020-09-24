@@ -89,7 +89,7 @@ async function onStreamerDisconnectOrTimeout(socket) {
 }
 
 function onPaymentRecieved(newDonation) {
-  console(
+  console.log(
     "Recieved new donation from " +
       newDonation.donor +
       " to " +
