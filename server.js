@@ -14,7 +14,7 @@ const io = SocketIO(server, { origins: "*:*" });
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 
-db.populateTestStreamers();
+// db.populateTestStreamers();
 
 app.set("view engine", "pug");
 
