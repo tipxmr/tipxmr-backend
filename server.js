@@ -1,11 +1,48 @@
-const app = require("express")();
-const server = require("http").createServer(app);
-const options = { origins: "*:*" };
-const io = require("socket.io")(server, options);
-//const io = require("socket.io")(3000, { origins: "*:*" });
+const url = require("url");
+const path = require("path");
+
+const express = require("express");
+const http = require("http");
+const SocketIO = require("socket.io");
+
+const db = require("./db");
+
+const app = express();
+const server = http.createServer(app);
+const io = SocketIO(server, { origins: "*:*" });
+
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
-const db = require("./db");
+
+db.populateTestStreamers();
+
+app.set("view engine", "pug");
+
+app.use("/public", express.static(path.join(__dirname, "public")));
+
+app.get("/", (request, response) => {
+  response.send("Hello there");
+});
+
+app.get("/animation/:uid", (request, response) => {
+  const { uid } = request.params;
+
+  if (uid) {
+    db.hasStreamingSession(uid)
+      .then((isValid) => {
+        if (isValid) {
+          response.render("animation");
+        } else {
+          response.send("invalid");  
+        }
+      })
+      .catch(() => {
+        response.send("error");
+      });
+  } else {
+    response.redirect("/");
+  }
+});
 
 // ===============================================================
 // Streamer Namespace
@@ -37,6 +74,41 @@ streamerNamespace.on("connection", (socket) => {
 
   // streamer changes his config, update db
   socket.on("updateConfig", (config) => {});
+
+  // TODO: use proper streamer, donator and ?animator socket namespaces
+  // TODO: define event/message types
+  socket.on("XXX_send_donation", (data) => {
+    streamerNamespace.emit("XXX_animation_start_paint", data);
+  });
+
+  socket.on("XXX_update_settings", (settings) => {
+    streamerNamespace.emit("XXX_animation_update_settings", settings);
+  });
+
+  socket.on("XXX_animation_get_settings", () => {
+    streamerNamespace.emit("XXX_animation_update_settings", {
+      opacity: 1
+    });
+    // streamerNamespace.emit("XXX_animation_update_settings", {
+    //   vector: [0, 10, 30],
+    //   display: 'block',
+    //   padding: 20,
+    //   background: 'linear-gradient(to right, #009fff, #ec2f4b)',
+    //   transform: 'translate3d(0px,0,0) scale(1) rotateX(0deg)',
+    //   boxShadow: '0px 10px 20px 0px rgba(0,0,0,0.4)',
+    //   borderBottom: '10px solid #2D3747',
+    //   shape: 'M20,20 L20,380 L380,380 L380,20 L20,20 Z',
+    //   textShadow: '0px 5px 15px rgba(255,255,255,0.5)'
+    // });
+  });
+
+  socket.on("XXX_animation_start_paint", (data) => {
+    console.log("animation start paint", data);
+  });
+
+  socket.on("XXX_animation_update_settings", (settings) => {
+    console.log("animation update settings", settings);
+  });
 });
 
 // ===============================================================
