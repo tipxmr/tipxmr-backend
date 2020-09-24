@@ -65,7 +65,9 @@ streamerNamespace.on("connection", (socket) => {
   });
 
   // streamer wallet recieved donation
-  socket.on("paymentRecieved", (data) => {});
+  socket.on("paymentRecieved", (newDonation) => {
+    onPaymentRecieved(newDonation);
+  });
 
   // streamer disconnects
   socket.on("disconnect", () => onStreamerDisconnectOrTimeout(socket));
@@ -156,6 +158,18 @@ async function onStreamerDisconnectOrTimeout(socket) {
   } else {
     console.log("Undefined streamer disconnected");
   }
+}
+
+function onPaymentRecieved(newDonation) {
+  console.log(
+    "Recieved new donation from " +
+      newDonation.donor +
+      " to " +
+      newDonation.displayName
+  );
+  donatorNamespace
+    .to(newDonation.donatorSocketId)
+    .emit("paymentConfirmation", newDonation);
 }
 
 // donator callbacks
