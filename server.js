@@ -33,7 +33,7 @@ app.get("/animation/:uid", (request, response) => {
         if (isValid) {
           response.render("animation");
         } else {
-          response.send("invalid");  
+          response.send("invalid");
         }
       })
       .catch(() => {
@@ -87,7 +87,7 @@ streamerNamespace.on("connection", (socket) => {
 
   socket.on("XXX_animation_get_settings", () => {
     streamerNamespace.emit("XXX_animation_update_settings", {
-      opacity: 1
+      opacity: 1,
     });
     // streamerNamespace.emit("XXX_animation_update_settings", {
     //   vector: [0, 10, 30],
@@ -129,6 +129,10 @@ donatorNamespace.on("connection", (socket) => {
   // donator disconnects
   socket.on("disconnect", () => {
     onDonatorDisconnectOrTimeout(socket);
+  });
+
+  socket.on("getOnlineStreamers", () => {
+    onGetOnlineStreamers(socket);
   });
 });
 
@@ -213,6 +217,11 @@ async function onGetSubaddress(socket, data) {
 
 function onDonatorDisconnectOrTimeout(socket) {
   console.log("donator (" + socket.id + ") disconnected");
+}
+
+async function onGetOnlineStreamers(socket) {
+  const onlineStreamers = await db.getAllOnlineStreamers();
+  donatorNamespace.to(socket.id).emit("emitOnlineStreamers", onlineStreamers);
 }
 
 server.listen(3000);
