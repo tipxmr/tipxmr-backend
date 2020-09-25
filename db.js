@@ -172,26 +172,38 @@ const hasStreamingSession = (id) =>
   );
 
 async function getAllOnlineStreamers() {
+  // index
   try {
-    const userDocs = await db.find({
-      selector: {
-        isOnline: { $eq: isOnline },
-        fields: [
-          "_id",
-          "displayName",
-          "userName",
-          "isOnline",
-          "profilePiture",
-          "streamURLS",
-        ],
-        sort: ["displayName"],
+    var result = await db.createIndex({
+      index: {
+        fields: ["displayName", "isOnline"],
+        ddoc: "name_index",
       },
     });
-    console.log("all online stremers", userDocs.docs);
+    console.log("createIndex", result);
+
+    const userDocs = await db.find({
+      selector: {
+        displayName: { $exists: true },
+        isOnline: { $eq: true },
+      },
+      use_index: "name_index",
+      sort: ["displayName"],
+
+      fields: [
+        "_id",
+        "displayName",
+        "userName",
+        "isOnline",
+        /* "profilePicture",
+        "streamURLS", */
+      ],
+    });
+    console.log("all online stremers", userDocs);
     return userDocs.docs;
   } catch (err) {
-    console.log("Something went wrong with getUserByUsername", err);
-    return return_error("Something went wrong with getUserByUsername", err);
+    console.log("Something went wrong with getAllOnlineStreamers", err);
+    return return_error("Something went wrong with getAllOnlineStreamers", err);
   }
 }
 
