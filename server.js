@@ -79,6 +79,10 @@ streamerNamespace.on("connection", (socket) => {
     db.updateStreamer(newStreamerConfig);
   });
 
+  socket.on("updateOnlineStatus", ({ hashedSeed, newOnlineStatus }) => {
+    db.updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus);
+  });
+
   // TODO: use proper streamer, donator and ?animator socket namespaces
   // TODO: define event/message types
   socket.on("XXX_send_donation", (data) => {
@@ -159,7 +163,7 @@ function onSubaddressToBackend(data) {
 async function onStreamerDisconnectOrTimeout(socket) {
   const disconnectedStreamer = await db.getStreamerBySocketId(socket.id);
   if (disconnectedStreamer !== null) {
-    db.updateOnlineStatusOfStreamer(disconnectedStreamer, false);
+    db.updateOnlineStatusOfStreamer(disconnectedStreamer.hashedSeed, false);
     console.log(
       "streamer: " + disconnectedStreamer.displayName + " disconnected"
     );

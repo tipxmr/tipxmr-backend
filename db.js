@@ -110,18 +110,18 @@ async function updateStreamer(newStreamerConfig) {
 }
 
 // update online status of streamer
-async function updateOnlineStatusOfStreamer(streamer, newOnlineStatus) {
+async function updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus) {
   // can only update existing entries
   try {
-    let userDoc = await db.get(streamer.hashedSeed);
-    userDoc.isOnline = newOnlineStatus;
-    return db.upsert(userDoc._id, function () {
+    let streamer = await db.get(hashedSeed);
+    streamer.isOnline = newOnlineStatus;
+    return db.upsert(streamer._id, function () {
       if (newOnlineStatus) {
-        console.log(userDoc.displayName + " went online");
+        console.log(streamer.displayName + " went online");
       } else {
-        console.log(userDoc.displayName + " went offline");
+        console.log(streamer.displayName + " went offline");
       }
-      return updateObj;
+      return streamer;
     });
   } catch (err) {
     console.log("Error in updateOnlineStatusOfStreamer", err);
@@ -180,9 +180,8 @@ async function getAllOnlineStreamers() {
         ddoc: "name_index",
       },
     });
-    console.log("createIndex", result);
 
-    const userDocs = await db.find({
+    const onlineStreamers = await db.find({
       selector: {
         displayName: { $exists: true },
         isOnline: { $eq: true },
@@ -206,8 +205,7 @@ async function getAllOnlineStreamers() {
         "animationSettings.goalProgress",
       ],
     });
-    console.log("all online stremers", userDocs);
-    return userDocs.docs;
+    return onlineStreamers.docs;
   } catch (err) {
     console.log("Something went wrong with getAllOnlineStreamers", err);
     return return_error("Something went wrong with getAllOnlineStreamers", err);
