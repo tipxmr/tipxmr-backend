@@ -195,8 +195,14 @@ async function getAllOnlineStreamers() {
         "displayName",
         "userName",
         "isOnline",
-        /* "profilePicture",
-        "streamURLS", */
+        "profilePicture",
+        "streamURLS",
+        "description",
+        "category",
+        "language",
+        "showGoal",
+        "goal",
+        "goalProgress",
       ],
     });
     console.log("all online stremers", userDocs);
