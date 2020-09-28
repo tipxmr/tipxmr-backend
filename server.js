@@ -14,7 +14,7 @@ const io = SocketIO(server, { origins: "*:*" });
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 
-// db.populateTestStreamers();
+db.populateTestStreamers();
 
 app.set("view engine", "pug");
 
@@ -51,7 +51,9 @@ app.get("/animation/:uid", (request, response) => {
 streamerNamespace.on("connection", (socket) => {
   // streamer requests config at login by giving his hashedSeed
   socket.on("getStreamerConfig", (hashedSeed) => {
-    db.getStreamerById(hashedSeed);
+    db.getStreamerById(hashedSeed).then((requestedStreamer) => {
+      socket.emit("recieveStreamerConfig", requestedStreamer);
+    });
   });
 
   // streamer sends info
@@ -73,7 +75,9 @@ streamerNamespace.on("connection", (socket) => {
   socket.on("disconnect", () => onStreamerDisconnectOrTimeout(socket));
 
   // streamer changes his config, update db
-  socket.on("updateConfig", (config) => {});
+  socket.on("updateConfig", (newStreamerConfig) => {
+    db.updateStreamer(newStreamerConfig);
+  });
 
   // TODO: use proper streamer, donator and ?animator socket namespaces
   // TODO: define event/message types
