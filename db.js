@@ -8,7 +8,7 @@ PouchDB.plugin(require("pouchdb-adapter-memory"));
 
 let db = new PouchDB("streamers", { adapter: "memory" });
 
-const testStreamers = require("./data/streamer");
+const testStreamers = require("./data/streamerTestDB");
 
 // return code masks
 function return_success(message, data = {}) {
@@ -96,16 +96,12 @@ async function getStreamerBySocketId(socketId) {
   }
 }
 
-// TODO Write an update function, to update settings
-// currently just overwriting existing doc
-async function updateStreamer(updateObj) {
+async function updateStreamer(newStreamerConfig) {
   // can only update existing entries
   try {
-    let userDoc = await db.get(updateObj._id);
-    console.log(userDoc);
-    return db.upsert(userDoc._id, function () {
-      console.log(userDoc);
-      return updateObj;
+    return db.upsert(newStreamerConfig._id, () => {
+      console.log("Updated streamer: " + newStreamerConfig.displayName);
+      return newStreamerConfig;
     });
   } catch (err) {
     console.log("Error in updateStreamer", err);
@@ -156,6 +152,7 @@ function populateTestStreamers() {
       return {
         ...testStreamer,
         animationId,
+        _id: testStreamer.hashedSeed,
       };
     });
 
@@ -196,13 +193,14 @@ async function getAllOnlineStreamers() {
         "userName",
         "isOnline",
         "profilePicture",
-        "streamURLS",
-        "description",
-        "category",
-        "language",
-        "showGoal",
-        "goal",
-        "goalProgress",
+        "stream.url",
+        "stream.description",
+        "stream.category",
+        "stream.language",
+        "stream.platform",
+        "animationSettings.showGoal",
+        "animationSettings.goal",
+        "animationSettings.goalProgress",
       ],
     });
     console.log("all online stremers", userDocs);
