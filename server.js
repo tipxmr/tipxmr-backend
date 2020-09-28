@@ -163,8 +163,6 @@ async function onStreamerDisconnectOrTimeout(socket) {
     console.log(
       "streamer: " + disconnectedStreamer.displayName + " disconnected"
     );
-  } else {
-    console.log("Undefined streamer disconnected");
   }
 }
 

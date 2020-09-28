@@ -110,14 +110,17 @@ async function updateStreamer(newStreamerConfig) {
 }
 
 // update online status of streamer
-async function updateOnlineStatusOfStreamer(streamer, onlineStatus) {
+async function updateOnlineStatusOfStreamer(streamer, newOnlineStatus) {
   // can only update existing entries
   try {
     let userDoc = await db.get(streamer.hashedSeed);
-    console.log(userDoc);
-    userDoc.isOnline = onlineStatus;
+    userDoc.isOnline = newOnlineStatus;
     return db.upsert(userDoc._id, function () {
-      console.log(userDoc);
+      if (newOnlineStatus) {
+        console.log(userDoc.displayName + " went online");
+      } else {
+        console.log(userDoc.displayName + " went offline");
+      }
       return updateObj;
     });
   } catch (err) {
