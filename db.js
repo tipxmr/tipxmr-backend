@@ -67,8 +67,10 @@ async function getStreamerByUsername(userName) {
     //console.log("searched and this is my userDoc", userDoc);
     return userDoc;
   } catch (err) {
-    console.log("Something went wrong with getUserByUsername", err);
-    return return_error("Something went wrong with getUserByUsername", err);
+    console.log(
+      return_error("Something went wrong with getUserByUsername", err)
+    );
+    return null;
   }
 }
 
