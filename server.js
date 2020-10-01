@@ -192,16 +192,22 @@ async function onGetStreamer(donatorSocketId, userName) {
       "."
   );
   const requestedStreamer = await db.getStreamerByUsername(userName);
+  console.log("requestedStreamer", requestedStreamer);
   // strip down relevant information for donator
-  const returnStreamerToDonator = {
-    userName: requestedStreamer.docs[0].userName,
-    displayName: requestedStreamer.docs[0].displayName,
-    hashedSeed: requestedStreamer.docs[0].hashedSeed,
-    isOnline: requestedStreamer.docs[0].isOnline,
-  };
-  donatorNamespace
-    .to(donatorSocketId)
-    .emit("recieveStreamer", returnStreamerToDonator);
+  // only if array is not empty
+  if (requestedStreamer.docs.length) {
+    const returnStreamerToDonator = {
+      userName: requestedStreamer.docs[0].userName,
+      displayName: requestedStreamer.docs[0].displayName,
+      hashedSeed: requestedStreamer.docs[0].hashedSeed,
+      isOnline: requestedStreamer.docs[0].isOnline,
+    };
+    donatorNamespace
+      .to(donatorSocketId)
+      .emit("recieveStreamer", returnStreamerToDonator);
+  } else {
+    donatorNamespace.to(donatorSocketId).emit("recieveStreamer", 0);
+  }
 }
 
 async function onGetSubaddress(socket, data) {
