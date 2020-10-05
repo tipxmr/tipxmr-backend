@@ -101,8 +101,8 @@ async function getStreamerBySocketId(socketId) {
 async function updateStreamer(newStreamerConfig) {
   // can only update existing entries
   try {
+    console.log("Updated streamer: " + newStreamerConfig.displayName);
     return db.upsert(newStreamerConfig._id, () => {
-      console.log("Updated streamer: " + newStreamerConfig.displayName);
       return newStreamerConfig;
     });
   } catch (err) {
