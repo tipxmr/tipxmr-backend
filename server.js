@@ -52,7 +52,11 @@ streamerNamespace.on("connection", (socket) => {
   // streamer requests config at login by giving his hashedSeed
   socket.on("getStreamerConfig", (hashedSeed) => {
     db.getStreamerById(hashedSeed).then((requestedStreamer) => {
-      socket.emit("recieveStreamerConfig", requestedStreamer);
+      // update socket.id of requestedStreamer
+      requestedStreamer.streamerSocketId = socket.id;
+      db.updateStreamer(requestedStreamer).then(() => {
+        socket.emit("recieveStreamerConfig", requestedStreamer);
+      });
     });
   });
 
@@ -72,7 +76,9 @@ streamerNamespace.on("connection", (socket) => {
   });
 
   // streamer disconnects
-  socket.on("disconnect", () => onStreamerDisconnectOrTimeout(socket));
+  socket.on("disconnect", () => {
+    onStreamerDisconnectOrTimeout(socket);
+  });
 
   // streamer changes his config, update db
   socket.on("updateConfig", (newStreamerConfig) => {
@@ -162,7 +168,7 @@ function onSubaddressToBackend(data) {
 
 async function onStreamerDisconnectOrTimeout(socket) {
   const disconnectedStreamer = await db.getStreamerBySocketId(socket.id);
-  if (disconnectedStreamer !== null) {
+  if (disconnectedStreamer !== null && disconnectedStreamer !== undefined) {
     db.updateOnlineStatusOfStreamer(disconnectedStreamer.hashedSeed, false);
     console.log(
       "streamer: " + disconnectedStreamer.displayName + " disconnected"

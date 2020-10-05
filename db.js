@@ -88,10 +88,10 @@ async function getStreamerBySocketId(socketId) {
   try {
     const userDoc = await db.find({
       selector: {
-        socketId: { $eq: socketId }, // make sure the username is lowercase
+        socketId: { $eq: socketId },
       },
     });
-    return userDoc;
+    return userDoc[0];
   } catch (err) {
     console.log("Something went wrong with getStreamerBySocketId", err);
     return return_error("Something went wrong with getStreamerBySocketId", err);

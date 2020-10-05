@@ -65,11 +65,11 @@ const grischa = {
     premium: false, // all customisations available
   },
   stream: {
-    url: "youtube.com",
-    platform: "youtube",
+    url: "chaturbate.com",
+    platform: "Chaturbate",
     language: "🇩🇪",
     description: "I am a greater streamer.",
-    category: "technology",
+    category: "XXX",
   },
   animationSettings: {
     secondPrice: 0, // XMR price of a second of display time
