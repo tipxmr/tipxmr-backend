@@ -207,6 +207,20 @@ async function onGetStreamer(donatorSocketId, userName) {
       displayName: requestedStreamer.docs[0].displayName,
       hashedSeed: requestedStreamer.docs[0].hashedSeed,
       isOnline: requestedStreamer.docs[0].isOnline,
+      secondPrice: requestedStreamer.docs[0].animationSettings.secondPrice,
+      charPrice: requestedStreamer.docs[0].animationSettings.charPrice,
+      charLimit: requestedStreamer.docs[0].animationSettings.charLimit,
+      minAmount: requestedStreamer.docs[0].animationSettings.minAmount,
+      gifsMinAmount: requestedStreamer.docs[0].animationSettings.gifsMinAmount,
+      goalProgress: requestedStreamer.docs[0].animationSettings.goalProgress,
+      goal: requestedStreamer.docs[0].animationSettings.goal,
+      goalReached: requestedStreamer.docs[0].animationSettings.goalReached,
+      streamUrl: requestedStreamer.docs[0].stream.url,
+      streamPlatform: requestedStreamer.docs[0].stream.platform,
+      streamLanguage: requestedStreamer.docs[0].stream.language,
+      streamDescription: requestedStreamer.docs[0].stream.description,
+      streamCategory: requestedStreamer.docs[0].stream.category,
+
     };
     donatorNamespace
       .to(donatorSocketId)
