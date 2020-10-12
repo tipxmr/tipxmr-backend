@@ -14,13 +14,9 @@ const alex = {
   creationDate: null, // track since when the user is registered
   restoreHeight: 674675,
   profilePicture: "", // allow the user to upload a user avatar
-  accountTier: {
-    basic: true, // only basic functions available for customizations
-    advanced: false, // more customisations
-    premium: false, // all customisations available
-  },
+  isPremium: false,
   stream: {
-    url: "https://mydirtyhobby.com",
+    url: "https://www.twitch.tv/n00bprogrammer",
     platform: "twitch",
     language: "🇩🇪",
     description: "I am a great streamer.",
@@ -60,11 +56,7 @@ const grischa = {
   creationDate: null, // track since when the user is registered
   restoreHeight: 667580,
   profilePicture: "", // allow the user to upload a user avatar
-  accountTier: {
-    basic: true, // only basic functions available for customizations
-    advanced: false, // more customisations
-    premium: false, // all customisations available
-  },
+  isPremium: false,
   stream: {
     url: "chaturbate.com",
     platform: "Chaturbate",
@@ -104,11 +96,7 @@ const jonas = {
   creationDate: null, // track since when the user is registered
   restoreHeight: 667580,
   profilePicture: "", // allow the user to upload a user avatar
-  accountTier: {
-    basic: true, // only basic functions available for customizations
-    advanced: false, // more customisations
-    premium: false, // all customisations available
-  },
+  isPremium: true,
   stream: {
     url: "youtube.com",
     platform: "youtube",
