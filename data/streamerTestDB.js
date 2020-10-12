@@ -13,7 +13,7 @@ const alex = {
   streamerSocketId: "",
   creationDate: null, // track since when the user is registered
   restoreHeight: 674675,
-  profilePicture: "", // allow the user to upload a user avatar
+  profilePicture: "data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", // allow the user to upload a user avatar
   isPremium: false,
   stream: {
     url: "https://www.twitch.tv/n00bprogrammer",
