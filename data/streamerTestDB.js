@@ -20,14 +20,14 @@ const alex = {
     premium: false, // all customisations available
   },
   stream: {
-    url: "mydirtyhobby.com",
+    url: "https://mydirtyhobby.com",
     platform: "twitch",
     language: "🇩🇪",
     description: "I am a great streamer.",
     category: "politics",
   },
   animationSettings: {
-    secondPrice: 0, // XMR price of a second of display time
+    secondPrice: 0.00042, // XMR price of a second of display time
     fontColor: "#F23456", // fontColor of the animation text
     fontSize: "xl", // size of animation text
     fontShadow: false, // enable a shadow around text
@@ -38,7 +38,8 @@ const alex = {
     goal: 0, // goal amount in XMR
     goalProgress: 0, // how many XMR already paid towards goal
     goalReached: false, // maybe unnecessary, if true, reset the goal
-    charLimit: 1000, // upperlimit for message length
+    charLimit: 99, // upperlimit for message length
+    charPrice: 0.0004,
     sound: "", // custom mp3 sound, needs to be an attachement
     bgImg: "", // show background image in stream
   },
