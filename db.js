@@ -1,6 +1,12 @@
 // setting up the db
 const { v4: generateUUID } = require("uuid");
 let PouchDB = require("pouchdb");
+const monerojs = require("monero-javascript");
+let daemon = monerojs.connectToDaemonRpc(
+  "http://node.cryptocano.de:38081",
+  "superuser",
+  "abctesting123"
+);
 
 PouchDB.plugin(require("pouchdb-upsert"));
 PouchDB.plugin(require("pouchdb-find"));
@@ -44,8 +50,13 @@ async function addStreamer(socketId, streamerConfig) {
     } else {
       // step 2: if there is nobody with that username, create the object in the db
       streamerConfig.streamerSocketId = socketId;
-      streamerConfig.isOnline = true;
+      //streamerConfig.isOnline = true;
       streamerConfig._id = streamerConfig.hashedSeed;
+      streamerConfig.restoreHeigh = await daemon.getHeight();
+      streamerConfig.creationDate = new Date()
+        .toISOString()
+        .replace("T", " ")
+        .substr(0, 19);
       const newStreamer = db.putIfNotExists(streamerConfig);
       console.log(streamerConfig.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'

@@ -13,7 +13,8 @@ const alex = {
   streamerSocketId: "",
   creationDate: null, // track since when the user is registered
   restoreHeight: 674675,
-  profilePicture: "data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", // allow the user to upload a user avatar
+  profilePicture:
+    "data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", // allow the user to upload a user avatar
   isPremium: false,
   stream: {
     url: "https://www.twitch.tv/n00bprogrammer",
@@ -76,7 +77,8 @@ const grischa = {
     goal: 0, // goal amount in XMR
     goalProgress: 0, // how many XMR already paid towards goal
     goalReached: false, // maybe unnecessary, if true, reset the goal
-    charLimit: 1000, // upperlimit for message length
+    charLimit: 100, // upperlimit for message length
+    charPrice: 0.0004,
     sound: "", // custom mp3 sound, needs to be an attachement
     bgImg: "", // show background image in stream
   },
