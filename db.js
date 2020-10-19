@@ -52,7 +52,7 @@ async function addStreamer(socketId, streamerConfig) {
       streamerConfig.streamerSocketId = socketId;
       //streamerConfig.isOnline = true;
       streamerConfig._id = streamerConfig.hashedSeed;
-      streamerConfig.restoreHeigh = await daemon.getHeight();
+      streamerConfig.restoreHeight = await daemon.getHeight();
       streamerConfig.creationDate = new Date()
         .toISOString()
         .replace("T", " ")
