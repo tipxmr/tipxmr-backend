@@ -43,32 +43,48 @@ const App = () => {
   }, []);
 
   return (
-    <div>
-      <h1>Animation</h1>
-      <h2>Donation</h2>
-      {donation ? (
-        <p>
-          Name: {donation.name}
-          <br />
-          Amount: {donation.amount} XMR
-          <br />
-          Message:
-          <div>{donation.message}</div>
-        </p>
-      ) : null}
-      <h2>Settings</h2>
-      {settings ? (
-        <p>
-          <pre>{JSON.stringify(settings, null, 4)}</pre>
-        </p>
-      ) : null}
-      <h2>Render</h2>
-      {donation ? (
-        <ReactSpring.animated.div style={props}>
-          {donation.name} donated {donation.amount} XMR<br />
-          {donation.message}
-        </ReactSpring.animated.div>
-      ) : null}
+    <div className="w-3/4 mx-auto">
+      <link
+        href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
+        rel="stylesheet"
+      />
+      <div className="m-3">
+        <h1 className="text-2xl">Animation Showcase</h1>
+        <h2 className="text-xl">Donation</h2>
+        {donation ? (
+          <p>
+            Name: {donation.name}
+            <br />
+            Amount: {donation.amount} XMR
+            <br />
+            Message:
+            <div>{donation.message}</div>
+          </p>
+        ) : null}
+      </div>
+      <div className="m-3">
+        <h2 className="text-xl">Settings</h2>
+        {settings ? (
+          <p>
+            <pre>{JSON.stringify(settings, null, 4)}</pre>
+          </p>
+        ) : null}
+      </div>
+      <div className="m-3">
+        <h2 className="text-xl my-3">Render</h2>
+        <div className="flex">
+          {donation ? (
+            <div className="text-center border-2 p-3 border-black">
+              <ReactSpring.animated.div style={props}>
+                <span className="font-bold">{donation.name}</span> tipped{" "}
+                <span className="font-bold">{donation.amount} XMR</span>
+                <br />
+                {donation.message}
+              </ReactSpring.animated.div>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 };
