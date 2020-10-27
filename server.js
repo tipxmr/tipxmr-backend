@@ -13,6 +13,7 @@ const io = SocketIO(server, { origins: "*:*" });
 
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
+const animationNamespace = io.of("/animation");
 
 db.populateTestStreamers();
 
@@ -151,6 +152,26 @@ donatorNamespace.on("connection", (socket) => {
 });
 
 // ===============================================================
+// Animation Namespace
+// ===============================================================
+
+animationNamespace.on("connection", (socket) => {
+  socket.on("getAnimationConfig", (streamerName) => {
+    onGetAnimationConfig(socket.id, streamerName);
+  });
+});
+
+async function onGetAnimationConfig(donatorSocketId, userName) {
+  const requestedStreamer = await db.getStreamerByUsername(userName);
+  // strip down relevant information for donator
+  // only if array is not empty
+  let animationSettings = requestedStreamer.docs[0]?.animationSettings ?? {};
+  animationNamespace
+    .to(donatorSocketId)
+    .emit("getAnimationConfig", animationSettings);
+}
+
+// ===============================================================
 // All Functions
 // ===============================================================
 
@@ -220,7 +241,6 @@ async function onGetStreamer(donatorSocketId, userName) {
       streamLanguage: requestedStreamer.docs[0].stream.language,
       streamDescription: requestedStreamer.docs[0].stream.description,
       streamCategory: requestedStreamer.docs[0].stream.category,
-
     };
     donatorNamespace
       .to(donatorSocketId)
