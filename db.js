@@ -53,10 +53,7 @@ async function addStreamer(socketId, streamerConfig) {
       //streamerConfig.isOnline = true;
       streamerConfig._id = streamerConfig.hashedSeed;
       streamerConfig.restoreHeight = await daemon.getHeight();
-      streamerConfig.creationDate = new Date()
-        .toISOString()
-        .replace("T", " ")
-        .substr(0, 19);
+      streamerConfig.creationDate = new Date();
       const newStreamer = db.putIfNotExists(streamerConfig);
       console.log(streamerConfig.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
