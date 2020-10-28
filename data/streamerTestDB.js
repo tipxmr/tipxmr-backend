@@ -25,14 +25,14 @@ const alex = {
   },
   animationSettings: {
     secondPrice: 0.00042, // XMR price of a second of display time
-    fontColor: "#F23456", // fontColor of the animation text
-    fontSize: "xl", // size of animation text
-    fontShadow: false, // enable a shadow around text
+    fontColor: "#FFFFFF", // fontColor of the animation text
+    fontSize: "text-4xl", // size of animation text
+    fontShadow: true, // enable a shadow around text
     minAmount: 0, // donations must be equal to or greater than minAmount
     gifs: true, // allow users to include gifs as message
     gifsMinAmount: 0, // min amount to let user send a gif
-    showGoal: false, // let the streamer decide whether to show a goal or not
-    goal: 0, // goal amount in XMR
+    showGoal: true, // let the streamer decide whether to show a goal or not
+    goal: 100, // goal amount in XMR
     goalProgress: 0, // how many XMR already paid towards goal
     goalReached: false, // maybe unnecessary, if true, reset the goal
     charLimit: 99, // upperlimit for message length
