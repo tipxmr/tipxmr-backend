@@ -42,6 +42,7 @@ async function getStreamer(key, value) {
     case "id":
       try {
         const streamer = await db.get(value);
+        console.log("Found streamer", streamer);
         return return_success(
           `Streamer (${streamer.userName}) found`,
           streamer
@@ -67,29 +68,34 @@ async function getStreamer(key, value) {
       }
     case "socketId":
       try {
-        const userDoc = await db.find({
+        const streamer = await db.find({
           selector: {
-            socketId: { $eq: value },
+            streamerSocketId: { $eq: value },
           },
         });
-        return userDoc[0];
+        return return_success(
+          `Streamer (${streamer.userName}) found`,
+          streamer
+        );
       } catch (err) {
         console.log(err);
-        return return_error("Streamer not found by SocketId", err);
+        return return_error("Streamer not found by streamerSocketId", err);
       }
     default:
       try {
-        const userDoc = await db.find({
+        const streamer = await db.find({
           selector: {
-            key: { $eq: value },
+            [key]: { $eq: value },
           },
         });
-        return userDoc[0];
+        return return_success(
+          `Streamer (${streamer.userName}) found by ${key}`,
+          streamer[0]
+        );
       } catch (err) {
         console.log(err);
         return return_error(`Streamer not found by ${key}`, err);
       }
-      break;
   }
 }
 
@@ -98,9 +104,9 @@ async function getStreamer(key, value) {
 async function addStreamer(socketId, streamerConfig) {
   try {
     // step 1: try to get the user with the username
-    const userDoc = await getStreamer("userName", streamerConfig.userName);
+    const response = await getStreamer("userName", streamerConfig.userName);
     // console.log(userDoc);
-    if (userDoc.docs.length > 0) {
+    if (response.type === "success") {
       console.log(streamerConfig.userName + " is taken");
       return return_error("username_taken");
     } else {
@@ -235,13 +241,9 @@ async function getAllOnlineStreamers() {
     return return_error("Something went wrong with getAllOnlineStreamers", err);
   }
 }
+
 async function test() {
-  console.log(
-    await getStreamer(
-      "id",
-      "b8185a25bbe3b4206e490558ab50b0567deca446d15282e92c5c66fde6693399"
-    )
-  );
+  console.log(await getStreamer("displayName", "AlexAnarcho"));
 }
 populateTestStreamers().then(test);
 
