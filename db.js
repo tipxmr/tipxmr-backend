@@ -16,6 +16,7 @@ PouchDB.plugin(require("pouchdb-adapter-memory"));
 PouchDB.debug.enable("pouchdb:find");
 let db = new PouchDB("streamers", { adapter: "memory" });
 
+const streamerModel = require("./data/defaultStreamerConfig");
 const testStreamers = require("./data/streamerTestDB");
 
 // return code masks
@@ -40,10 +41,10 @@ function return_error(message, error = {}) {
 // ===============================================================
 
 async function getStreamer(key, value) {
-  if (key === "idd") {
+  if (key === "id") {
     try {
       const streamer = await db.get(value);
-      console.log("Found streamer", streamer);
+      console.log("Found streamer:", streamer.userName);
       return return_success(`Streamer (${streamer.userName}) found`, streamer);
     } catch (err) {
       console.log(err);
@@ -66,25 +67,52 @@ async function getStreamer(key, value) {
   }
 }
 
+async function loginStreamer(socketId, hashedSeed, userName = null) {
+  const response = await getStreamer("id", hashedSeed);
+  // When success, then streamer is already in DB
+  if (response.type === "success") {
+    // then return object
+    return response;
+  } else {
+    // hashedSeed is not registered in DB, so create new User
+    if (userName) {
+      console.log("streamer not found in db, creating new user now");
+      const response = await createStreamer(socketId, hashedSeed, userName);
+      if (response.type === "success") {
+        return return_success("New StreamerConfig created", response.data);
+      } else {
+        return return_error(
+          "Could not create new StreamerConfig",
+          response.error
+        );
+      }
+    }
+    return return_error(
+      "hashedSeed not found and no userName for userCreation was sent."
+    );
+  }
+}
+
 // add a new streamer (register process), username needs to be unique
-// SUGAR version
-async function addStreamer(socketId, streamerConfig) {
+async function createStreamer(socketId, hashedSeed, userName) {
   try {
-    // step 1: try to get the user with the username
-    const response = await getStreamer("userName", streamerConfig.userName);
+    // step 1: check if username ist taken
+    const response = await getStreamer("userName", userName);
     // console.log(userDoc);
     if (response.type === "success") {
       console.log(streamerConfig.userName + " is taken");
       return return_error("username_taken");
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      streamerConfig.streamerSocketId = socketId;
-      //streamerConfig.isOnline = true;
-      streamerConfig._id = streamerConfig.hashedSeed;
-      streamerConfig.restoreHeight = await daemon.getHeight();
-      streamerConfig.creationDate = new Date();
-      const newStreamer = db.putIfNotExists(streamerConfig);
-      console.log(streamerConfig.userName + " successfully created");
+      let newStreamer = streamerModel;
+      newStreamer.streamerSocketId = socketId;
+      newStreamer._id = hashedSeed;
+      newStreamer.userName = userName;
+      newStreamer.hashedSeed = hashedSeed;
+      newStreamer.restoreHeight = await daemon.getHeight();
+      newStreamer.creationDate = new Date();
+      db.putIfNotExists(newStreamer);
+      console.log(newStreamer.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
   } catch (err) {
@@ -232,7 +260,7 @@ async function test() {
 populateTestStreamers().then(createIndex).then(test);
  */
 module.exports = {
-  addStreamer,
+  loginStreamer,
   getStreamer,
   updateStreamer,
   updateOnlineStatusOfStreamer,

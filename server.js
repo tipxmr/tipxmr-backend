@@ -51,23 +51,12 @@ app.get("/animation/:uid", (request, response) => {
 
 streamerNamespace.on("connection", (socket) => {
   // streamer requests config at login by giving his hashedSeed
-  socket.on("getStreamerConfig", (hashedSeed) => {
-    db.getStreamer("id", hashedSeed).then((response) => {
-      if (response.type == "success") {
-        const requestedStreamer = response.data;
-        // update socket.id of requestedStreamer
-        requestedStreamer.streamerSocketId = socket.id;
-        db.updateStreamer(requestedStreamer).then(() => {
-          socket.emit("recieveStreamerConfig", requestedStreamer);
-        });
-      }
+  socket.on("login", ({ hashedSeed, userName }, callback) => {
+    onLogin(socket, hashedSeed, userName).then((response) => {
+      //socket.emit("login", response);
+      callback(response);
     });
   });
-
-  // streamer sends info
-  socket.on("streamerInfo", (streamerInfo) =>
-    onStreamerInfo(socket, streamerInfo)
-  );
 
   // streamer return subaddress
   socket.on("subaddressToBackend", (data) => {
@@ -178,9 +167,8 @@ async function onGetAnimationConfig(donatorSocketId, userName) {
 // All Functions
 // ===============================================================
 
-// callbacks streamer
-function onStreamerInfo(socket, streamerInfo) {
-  db.addStreamer(socket.id, streamerInfo);
+async function onLogin(socket, hashedSeed, userName) {
+  return await db.loginStreamer(socket.id, hashedSeed, userName);
 }
 
 function onSubaddressToBackend(data) {
