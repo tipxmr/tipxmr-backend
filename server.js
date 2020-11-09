@@ -52,12 +52,15 @@ app.get("/animation/:uid", (request, response) => {
 streamerNamespace.on("connection", (socket) => {
   // streamer requests config at login by giving his hashedSeed
   socket.on("getStreamerConfig", (hashedSeed) => {
-    db.getStreamerById(hashedSeed).then((requestedStreamer) => {
-      // update socket.id of requestedStreamer
-      requestedStreamer.streamerSocketId = socket.id;
-      db.updateStreamer(requestedStreamer).then(() => {
-        socket.emit("recieveStreamerConfig", requestedStreamer);
-      });
+    db.getStreamer("id", hashedSeed).then((response) => {
+      if (response.type == "success") {
+        const requestedStreamer = response.data;
+        // update socket.id of requestedStreamer
+        requestedStreamer.streamerSocketId = socket.id;
+        db.updateStreamer(requestedStreamer).then(() => {
+          socket.emit("recieveStreamerConfig", requestedStreamer);
+        });
+      }
     });
   });
 
@@ -162,7 +165,7 @@ animationNamespace.on("connection", (socket) => {
 });
 
 async function onGetAnimationConfig(donatorSocketId, userName) {
-  const requestedStreamer = await db.getStreamerByUsername(userName);
+  const requestedStreamer = await db.getStreamer("userName", userName);
   // strip down relevant information for donator
   // only if array is not empty
   let animationSettings = requestedStreamer.docs[0]?.animationSettings ?? {};
@@ -188,7 +191,7 @@ function onSubaddressToBackend(data) {
 }
 
 async function onStreamerDisconnectOrTimeout(socket) {
-  const disconnectedStreamer = await db.getStreamerBySocketId(socket.id);
+  const disconnectedStreamer = await db.getStreamer("socketId", socket.id);
   if (disconnectedStreamer !== null && disconnectedStreamer !== undefined) {
     db.updateOnlineStatusOfStreamer(disconnectedStreamer.hashedSeed, false);
     console.log(
@@ -218,7 +221,7 @@ async function onGetStreamer(donatorSocketId, userName) {
       userName +
       "."
   );
-  const requestedStreamer = await db.getStreamerByUsername(userName);
+  const requestedStreamer = await db.getStreamer("userName", userName);
   console.log("requestedStreamer", requestedStreamer);
   // strip down relevant information for donator
   // only if array is not empty
@@ -254,7 +257,7 @@ async function onGetSubaddress(socket, data) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
-  const requestedStreamer = await db.getStreamerByUsername(data.userName);
+  const requestedStreamer = await db.getStreamer("userName", data.userName);
   if (
     requestedStreamer.docs[0] !== undefined &&
     requestedStreamer.docs[0].isOnline === true

@@ -37,12 +37,68 @@ function return_error(message, error = {}) {
 // DB operations
 // ===============================================================
 
+async function getStreamer(key, value) {
+  switch (key) {
+    case "id":
+      try {
+        const streamer = await db.get(value);
+        return return_success(
+          `Streamer (${streamer.userName}) found`,
+          streamer
+        );
+      } catch (err) {
+        console.log(err);
+        return return_error("Streamer not found by hashedSeed", err);
+      }
+    case "userName":
+      try {
+        const streamer = await db.find({
+          selector: {
+            userName: { $eq: value }, // make sure the userName is lowercase
+          },
+        });
+        return return_success(
+          `Streamer (${streamer.userName}) found`,
+          streamer
+        );
+      } catch (err) {
+        console.log(err);
+        return return_error("Streamer not found by userName", err);
+      }
+    case "socketId":
+      try {
+        const userDoc = await db.find({
+          selector: {
+            socketId: { $eq: value },
+          },
+        });
+        return userDoc[0];
+      } catch (err) {
+        console.log(err);
+        return return_error("Streamer not found by SocketId", err);
+      }
+    default:
+      try {
+        const userDoc = await db.find({
+          selector: {
+            key: { $eq: value },
+          },
+        });
+        return userDoc[0];
+      } catch (err) {
+        console.log(err);
+        return return_error(`Streamer not found by ${key}`, err);
+      }
+      break;
+  }
+}
+
 // add a new streamer (register process), username needs to be unique
 // SUGAR version
 async function addStreamer(socketId, streamerConfig) {
   try {
     // step 1: try to get the user with the username
-    const userDoc = await getStreamerByUsername(streamerConfig.userName);
+    const userDoc = await getStreamer("userName", streamerConfig.userName);
     // console.log(userDoc);
     if (userDoc.docs.length > 0) {
       console.log(streamerConfig.userName + " is taken");
@@ -61,48 +117,6 @@ async function addStreamer(socketId, streamerConfig) {
   } catch (err) {
     console.log("Something went wrong with addStreamer", err);
     return return_error("Something went wrong with addStreamer", err);
-  }
-}
-
-// given a username, return the doc object of said user
-async function getStreamerByUsername(userName) {
-  try {
-    const userDoc = await db.find({
-      selector: {
-        userName: { $eq: userName }, // make sure the userName is lowercase
-      },
-    });
-    //console.log("searched and this is my userDoc", userDoc);
-    return userDoc;
-  } catch (err) {
-    console.log(
-      return_error("Something went wrong with getUserByUsername", err)
-    );
-    return null;
-  }
-}
-
-async function getStreamerById(id) {
-  try {
-    return await db.get(id);
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-}
-
-// given a socketId, return the doc object of said user
-async function getStreamerBySocketId(socketId) {
-  try {
-    const userDoc = await db.find({
-      selector: {
-        socketId: { $eq: socketId },
-      },
-    });
-    return userDoc[0];
-  } catch (err) {
-    console.log("Something went wrong with getStreamerBySocketId", err);
-    return return_error("Something went wrong with getStreamerBySocketId", err);
   }
 }
 
@@ -156,7 +170,7 @@ const where = (selector) => db.find({ selector });
 
 const generateAnimationId = () => generateUUID().split("-").join("");
 
-function populateTestStreamers() {
+async function populateTestStreamers() {
   const streamers = testStreamers
     .filter((testStreamer) => Object.keys(testStreamer).length)
     .map((testStreamer) => {
@@ -221,12 +235,19 @@ async function getAllOnlineStreamers() {
     return return_error("Something went wrong with getAllOnlineStreamers", err);
   }
 }
+async function test() {
+  console.log(
+    await getStreamer(
+      "id",
+      "b8185a25bbe3b4206e490558ab50b0567deca446d15282e92c5c66fde6693399"
+    )
+  );
+}
+populateTestStreamers().then(test);
 
 module.exports = {
   addStreamer,
-  getStreamerById,
-  getStreamerByUsername,
-  getStreamerBySocketId,
+  getStreamer,
   updateStreamer,
   updateOnlineStatusOfStreamer,
   showAll,
