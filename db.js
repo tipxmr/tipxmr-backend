@@ -1,6 +1,5 @@
 // setting up the db
 const { v4: generateUUID } = require("uuid");
-let PouchDB = require("pouchdb");
 const monerojs = require("monero-javascript");
 let daemon = monerojs.connectToDaemonRpc(
   "http://node.cryptocano.de:38081",
@@ -8,10 +7,13 @@ let daemon = monerojs.connectToDaemonRpc(
   "abctesting123"
 );
 
+let PouchDB = require("pouchdb");
+PouchDB.plugin(require("pouchdb-debug"));
 PouchDB.plugin(require("pouchdb-upsert"));
 PouchDB.plugin(require("pouchdb-find"));
 PouchDB.plugin(require("pouchdb-adapter-memory"));
 
+PouchDB.debug.enable("pouchdb:find");
 let db = new PouchDB("streamers", { adapter: "memory" });
 
 const testStreamers = require("./data/streamerTestDB");
@@ -38,6 +40,33 @@ function return_error(message, error = {}) {
 // ===============================================================
 
 async function getStreamer(key, value) {
+  if (key === "id") {
+    try {
+      const streamer = await db.get(value);
+      console.log("Found streamer", streamer);
+      return return_success(`Streamer (${streamer.userName}) found`, streamer);
+    } catch (err) {
+      console.log(err);
+      return return_error("Streamer not found by hashedSeed", err);
+    }
+  } else {
+    const selector = { [key]: value };
+    try {
+      const streamer = await db.find({
+        selector: selector,
+      });
+      return return_success(
+        `Streamer (${streamer.userName}) found by ${key}`,
+        streamer[0]
+      );
+    } catch (err) {
+      console.log(err);
+      return return_error(`Streamer not found by ${key}`, err);
+    }
+  }
+}
+
+/* async function getStreamer(key, value) {
   switch (key) {
     case "id":
       try {
@@ -60,7 +89,7 @@ async function getStreamer(key, value) {
         });
         return return_success(
           `Streamer (${streamer.userName}) found`,
-          streamer
+          streamer[0]
         );
       } catch (err) {
         console.log(err);
@@ -85,19 +114,19 @@ async function getStreamer(key, value) {
       try {
         const streamer = await db.find({
           selector: {
-            [key]: { $eq: value },
+            [key]: value,
           },
         });
         return return_success(
           `Streamer (${streamer.userName}) found by ${key}`,
-          streamer[0]
+          streamer
         );
       } catch (err) {
         console.log(err);
         return return_error(`Streamer not found by ${key}`, err);
       }
   }
-}
+} */
 
 // add a new streamer (register process), username needs to be unique
 // SUGAR version
@@ -243,7 +272,8 @@ async function getAllOnlineStreamers() {
 }
 
 async function test() {
-  console.log(await getStreamer("displayName", "AlexAnarcho"));
+  const streamer = await getStreamer("displayName", "AlexAnarcho");
+  console.log("test", streamer);
 }
 populateTestStreamers().then(test);
 
