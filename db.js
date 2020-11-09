@@ -1,6 +1,5 @@
 // setting up the db
 const { v4: generateUUID } = require("uuid");
-let PouchDB = require("pouchdb");
 const monerojs = require("monero-javascript");
 let daemon = monerojs.connectToDaemonRpc(
   "http://node.cryptocano.de:38081",
@@ -8,12 +7,16 @@ let daemon = monerojs.connectToDaemonRpc(
   "abctesting123"
 );
 
+let PouchDB = require("pouchdb");
+PouchDB.plugin(require("pouchdb-debug"));
 PouchDB.plugin(require("pouchdb-upsert"));
 PouchDB.plugin(require("pouchdb-find"));
 PouchDB.plugin(require("pouchdb-adapter-memory"));
 
+PouchDB.debug.enable("pouchdb:find");
 let db = new PouchDB("streamers", { adapter: "memory" });
 
+const streamerModel = require("./data/defaultStreamerConfig");
 const testStreamers = require("./data/streamerTestDB");
 
 // return code masks
@@ -37,72 +40,84 @@ function return_error(message, error = {}) {
 // DB operations
 // ===============================================================
 
+async function getStreamer(key, value) {
+  if (key === "id") {
+    try {
+      const streamer = await db.get(value);
+      console.log("Found streamer:", streamer.userName);
+      return return_success(`Streamer (${streamer.userName}) found`, streamer);
+    } catch (err) {
+      console.log(err);
+      return return_error("Streamer not found by hashedSeed", err);
+    }
+  } else {
+    const selector = { [key]: value };
+    try {
+      const streamer = await db.find({
+        selector: selector,
+      });
+      return return_success(
+        `Streamer (${streamer.userName}) found by ${key}`,
+        streamer.docs[0]
+      );
+    } catch (err) {
+      console.log(err);
+      return return_error(`Streamer not found by ${key}`, err);
+    }
+  }
+}
+
+async function loginStreamer(socketId, hashedSeed, userName = null) {
+  const response = await getStreamer("id", hashedSeed);
+  // When success, then streamer is already in DB
+  if (response.type === "success") {
+    // then return object
+    return response;
+  } else {
+    // hashedSeed is not registered in DB, so create new User
+    if (userName) {
+      console.log("streamer not found in db, creating new user now");
+      const response = await createStreamer(socketId, hashedSeed, userName);
+      if (response.type === "success") {
+        return return_success("New StreamerConfig created", response.data);
+      } else {
+        return return_error(
+          "Could not create new StreamerConfig",
+          response.error
+        );
+      }
+    }
+    return return_error(
+      "hashedSeed not found and no userName for userCreation was sent."
+    );
+  }
+}
+
 // add a new streamer (register process), username needs to be unique
-// SUGAR version
-async function addStreamer(socketId, streamerConfig) {
+async function createStreamer(socketId, hashedSeed, userName) {
   try {
-    // step 1: try to get the user with the username
-    const userDoc = await getStreamerByUsername(streamerConfig.userName);
+    // step 1: check if username ist taken
+    const response = await getStreamer("userName", userName);
     // console.log(userDoc);
-    if (userDoc.docs.length > 0) {
+    if (response.type === "success") {
       console.log(streamerConfig.userName + " is taken");
       return return_error("username_taken");
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      streamerConfig.streamerSocketId = socketId;
-      //streamerConfig.isOnline = true;
-      streamerConfig._id = streamerConfig.hashedSeed;
-      streamerConfig.restoreHeight = await daemon.getHeight();
-      streamerConfig.creationDate = new Date();
-      const newStreamer = db.putIfNotExists(streamerConfig);
-      console.log(streamerConfig.userName + " successfully created");
+      let newStreamer = streamerModel;
+      newStreamer.streamerSocketId = socketId;
+      newStreamer._id = hashedSeed;
+      newStreamer.userName = userName;
+      newStreamer.hashedSeed = hashedSeed;
+      newStreamer.restoreHeight = await daemon.getHeight();
+      newStreamer.creationDate = new Date();
+      db.putIfNotExists(newStreamer);
+      console.log(newStreamer.userName + " successfully created");
       return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
     }
   } catch (err) {
     console.log("Something went wrong with addStreamer", err);
     return return_error("Something went wrong with addStreamer", err);
-  }
-}
-
-// given a username, return the doc object of said user
-async function getStreamerByUsername(userName) {
-  try {
-    const userDoc = await db.find({
-      selector: {
-        userName: { $eq: userName }, // make sure the userName is lowercase
-      },
-    });
-    //console.log("searched and this is my userDoc", userDoc);
-    return userDoc;
-  } catch (err) {
-    console.log(
-      return_error("Something went wrong with getUserByUsername", err)
-    );
-    return null;
-  }
-}
-
-async function getStreamerById(id) {
-  try {
-    return await db.get(id);
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-}
-
-// given a socketId, return the doc object of said user
-async function getStreamerBySocketId(socketId) {
-  try {
-    const userDoc = await db.find({
-      selector: {
-        socketId: { $eq: socketId },
-      },
-    });
-    return userDoc[0];
-  } catch (err) {
-    console.log("Something went wrong with getStreamerBySocketId", err);
-    return return_error("Something went wrong with getStreamerBySocketId", err);
   }
 }
 
@@ -156,7 +171,7 @@ const where = (selector) => db.find({ selector });
 
 const generateAnimationId = () => generateUUID().split("-").join("");
 
-function populateTestStreamers() {
+async function populateTestStreamers() {
   const streamers = testStreamers
     .filter((testStreamer) => Object.keys(testStreamer).length)
     .map((testStreamer) => {
@@ -222,11 +237,31 @@ async function getAllOnlineStreamers() {
   }
 }
 
+/* async function createIndex() {
+  try {
+    var result = await db.createIndex({
+      index: {
+        fields: ["userName", "displayName", "hashedSeed", "_id"],
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function test() {
+  const streamer = await getStreamer(
+    "_id",
+    "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7"
+  );
+  console.log("test", streamer);
+}
+
+populateTestStreamers().then(createIndex).then(test);
+ */
 module.exports = {
-  addStreamer,
-  getStreamerById,
-  getStreamerByUsername,
-  getStreamerBySocketId,
+  loginStreamer,
+  getStreamer,
   updateStreamer,
   updateOnlineStatusOfStreamer,
   showAll,
