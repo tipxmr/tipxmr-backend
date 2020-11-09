@@ -40,7 +40,7 @@ function return_error(message, error = {}) {
 // ===============================================================
 
 async function getStreamer(key, value) {
-  if (key === "id") {
+  if (key === "idd") {
     try {
       const streamer = await db.get(value);
       console.log("Found streamer", streamer);
@@ -57,7 +57,7 @@ async function getStreamer(key, value) {
       });
       return return_success(
         `Streamer (${streamer.userName}) found by ${key}`,
-        streamer[0]
+        streamer.docs[0]
       );
     } catch (err) {
       console.log(err);
@@ -65,68 +65,6 @@ async function getStreamer(key, value) {
     }
   }
 }
-
-/* async function getStreamer(key, value) {
-  switch (key) {
-    case "id":
-      try {
-        const streamer = await db.get(value);
-        console.log("Found streamer", streamer);
-        return return_success(
-          `Streamer (${streamer.userName}) found`,
-          streamer
-        );
-      } catch (err) {
-        console.log(err);
-        return return_error("Streamer not found by hashedSeed", err);
-      }
-    case "userName":
-      try {
-        const streamer = await db.find({
-          selector: {
-            userName: { $eq: value }, // make sure the userName is lowercase
-          },
-        });
-        return return_success(
-          `Streamer (${streamer.userName}) found`,
-          streamer[0]
-        );
-      } catch (err) {
-        console.log(err);
-        return return_error("Streamer not found by userName", err);
-      }
-    case "socketId":
-      try {
-        const streamer = await db.find({
-          selector: {
-            streamerSocketId: { $eq: value },
-          },
-        });
-        return return_success(
-          `Streamer (${streamer.userName}) found`,
-          streamer
-        );
-      } catch (err) {
-        console.log(err);
-        return return_error("Streamer not found by streamerSocketId", err);
-      }
-    default:
-      try {
-        const streamer = await db.find({
-          selector: {
-            [key]: value,
-          },
-        });
-        return return_success(
-          `Streamer (${streamer.userName}) found by ${key}`,
-          streamer
-        );
-      } catch (err) {
-        console.log(err);
-        return return_error(`Streamer not found by ${key}`, err);
-      }
-  }
-} */
 
 // add a new streamer (register process), username needs to be unique
 // SUGAR version
@@ -271,12 +209,28 @@ async function getAllOnlineStreamers() {
   }
 }
 
+/* async function createIndex() {
+  try {
+    var result = await db.createIndex({
+      index: {
+        fields: ["userName", "displayName", "hashedSeed", "_id"],
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 async function test() {
-  const streamer = await getStreamer("displayName", "AlexAnarcho");
+  const streamer = await getStreamer(
+    "_id",
+    "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7"
+  );
   console.log("test", streamer);
 }
-populateTestStreamers().then(test);
 
+populateTestStreamers().then(createIndex).then(test);
+ */
 module.exports = {
   addStreamer,
   getStreamer,
