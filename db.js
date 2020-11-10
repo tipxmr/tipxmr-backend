@@ -83,13 +83,15 @@ async function loginStreamer(socketId, hashedSeed, userName = null) {
       } else {
         return return_error(
           "Could not create new StreamerConfig",
-          response.error
+          "userNameTaken"
         );
       }
+    } else {
+      return return_error(
+        "hashedSeed not found and no userName for userCreation was sent.",
+        "noUserName"
+      );
     }
-    return return_error(
-      "hashedSeed not found and no userName for userCreation was sent."
-    );
   }
 }
 
@@ -101,7 +103,7 @@ async function createStreamer(socketId, hashedSeed, userName) {
     // console.log(userDoc);
     if (response.type === "success") {
       console.log(streamerConfig.userName + " is taken");
-      return return_error("username_taken");
+      return return_error("userName is taken", "userNameTaken");
     } else {
       // step 2: if there is nobody with that username, create the object in the db
       let newStreamer = streamerModel;
