@@ -56,10 +56,14 @@ async function getStreamer(key, value) {
       const streamer = await db.find({
         selector: selector,
       });
-      return return_success(
-        `Streamer (${streamer.userName}) found by ${key}`,
-        streamer.docs[0]
-      );
+      if (streamer.docs.length > 0) {
+        return return_success(
+          `Streamer (${streamer.userName}) found by ${key}`,
+          streamer.docs[0]
+        );
+      } else {
+        return return_error(`Streamer not found by ${key}`, "notFound");
+      }
     } catch (err) {
       console.log(err);
       return return_error(`Streamer not found by ${key}`, err);
@@ -81,10 +85,7 @@ async function loginStreamer(socketId, hashedSeed, userName = null) {
       if (response.type === "success") {
         return return_success("New StreamerConfig created", response.data);
       } else {
-        return return_error(
-          "Could not create new StreamerConfig",
-          "userNameTaken"
-        );
+        return response;
       }
     } else {
       return return_error(
@@ -102,24 +103,24 @@ async function createStreamer(socketId, hashedSeed, userName) {
     const response = await getStreamer("userName", userName);
     // console.log(userDoc);
     if (response.type === "success") {
-      console.log(streamerConfig.userName + " is taken");
+      console.log(response.data.userName + " is taken");
       return return_error("userName is taken", "userNameTaken");
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      let newStreamer = streamerModel;
-      newStreamer.streamerSocketId = socketId;
+      let newStreamer = streamerModel.defaultStreamerConfig;
       newStreamer._id = hashedSeed;
-      newStreamer.userName = userName;
       newStreamer.hashedSeed = hashedSeed;
+      newStreamer.streamerSocketId = socketId;
+      newStreamer.userName = userName;
       newStreamer.restoreHeight = await daemon.getHeight();
       newStreamer.creationDate = new Date();
       db.putIfNotExists(newStreamer);
       console.log(newStreamer.userName + " successfully created");
-      return return_success("new_user_created", newStreamer); // keep in mind the userDoc is in 'data'
+      return return_success("new_user_created", newStreamer);
     }
   } catch (err) {
-    console.log("Something went wrong with addStreamer", err);
-    return return_error("Something went wrong with addStreamer", err);
+    console.log("Something went wrong with createStreamer", err);
+    return return_error("Something went wrong with createStreamer", err);
   }
 }
 
