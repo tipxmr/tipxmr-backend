@@ -16,6 +16,13 @@ const alex = {
   profilePicture:
     "data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", // allow the user to upload a user avatar
   isPremium: false,
+  payDate: "Mon Nov 16 2020 10:06:52 GMT+0400 (Georgia Standard Time)",
+  subscription: {
+    ok: true,
+    subaddress: "",
+    index: 0,
+  },
+  // if paydate checks out, ok is true, else, add subaddress
   stream: {
     url: "https://www.twitch.tv/n00bprogrammer",
     platform: "twitch",

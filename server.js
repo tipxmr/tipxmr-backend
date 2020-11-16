@@ -1,9 +1,14 @@
+// server wallet seed
+const env = require("dotenv");
+env.config();
+
 const url = require("url");
 const path = require("path");
-
+// const ramda = require("ramda");
 const express = require("express");
 const http = require("http");
 const SocketIO = require("socket.io");
+const monerojs = require("./monero");
 
 const db = require("./db");
 
@@ -14,6 +19,9 @@ const io = SocketIO(server, { origins: "*:*" });
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const animationNamespace = io.of("/animation");
+
+// open monero wallet rpc
+monerojs.openWallet();
 
 db.populateTestStreamers();
 
@@ -54,7 +62,16 @@ streamerNamespace.on("connection", (socket) => {
   socket.on("login", ({ hashedSeed, userName }, callback) => {
     onLogin(socket, hashedSeed, userName).then((response) => {
       //socket.emit("login", response);
-      callback(response);
+      checkDate(response); // set subscription to false if paydate is in past
+      // TODO put subaddress in subscription
+      // accountIndex:0; label: userName;
+      monerojs.walletRpc
+        .createSubaddress(0, response.data.userName) // grab new subaddress
+        .then((res) => {
+          response.data.subscription.subaddress = res.state.address;
+          response.data.subscription.index = res.state.index;
+        })
+        .then(() => callback(response));
     });
   });
 
@@ -266,5 +283,17 @@ async function onGetOnlineStreamers(socket) {
   const onlineStreamers = await db.getAllOnlineStreamers();
   donatorNamespace.to(socket.id).emit("emitOnlineStreamers", onlineStreamers);
 }
+
+function checkDate(response) {
+  let today = new Date();
+  let payDate = new Date(response.data.payDate);
+  if (payDate < today) {
+    response.data.subscription.ok = false;
+    console.log("Payment due");
+  }
+}
+
+// TODO if invoice payed, set subscription ok to true
+// TODO isPremium bool
 
 server.listen(3000);

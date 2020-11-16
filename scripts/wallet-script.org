@@ -1,0 +1,3 @@
+#+begin_src js
+const monerojs = require("./monero");
+#+end_src
