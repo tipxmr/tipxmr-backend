@@ -21,7 +21,6 @@ const animationNamespace = io.of("/animation");
 
 // open monero wallet rpc
 monerojs.openWallet();
-monerojs.checkForPayment();
 
 db.populateTestStreamers();
 
@@ -57,11 +56,30 @@ app.get("/animation/:uid", (request, response) => {
 var toBePaid = [];
 
 function checkPaid() {
-  for (let invoice of toBePaid) {
-  }
-  for (let payment of payments) {
-  }
+  // creating a list with all incoming transfers
+  monerojs.walletRpc
+    .getTransfers({
+      isIncoming: true,
+    })
+    .then((incomingTransfers) => {
+      for (let incoming of incomingTransfers) {
+        // console.log("incoming: ", incoming);
+        for (let invoice of toBePaid) {
+          // console.log("invoice: ", invoice);
+          if (invoice.address === incoming.address) {
+            console.log("Invoice paid: ", invoice.address);
+          }
+        }
+      }
+    });
+  // loop through invoices, compare addresses with incomingTransfers
 }
+
+setInterval(() => {
+  console.log("starting interval");
+  checkPaid();
+  clearInterval();
+}, 60000);
 
 // ===============================================================
 // Streamer Namespace
@@ -84,7 +102,7 @@ streamerNamespace.on("connection", (socket) => {
 
           // load the information in a list for backend
           toBePaid.push(res.state);
-          console.log(toBePaid);
+          console.log("to be paid", toBePaid);
         })
         .then(() => callback(response)); // give updated Streamer to frontend
     });

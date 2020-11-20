@@ -54,21 +54,9 @@ async function openWallet() {
 
 async function checkForPayment() {
   try {
-    let payments = await walletRpc.getTransfers({
+    return await walletRpc.getTransfers({
       isIncoming: true,
     });
-    for (var payment of payments) {
-      console.log("payment: ", payment);
-      subaddress = payment.state.address;
-      amount = payment.state.amount;
-      // label = payment.state.
-      console.log(
-        "Transaction incoming: " +
-          (await amount) / Math.pow(10, 12) +
-          " XMR to " +
-          subaddress
-      );
-    }
   } catch (err) {
     console.log(err);
   }
