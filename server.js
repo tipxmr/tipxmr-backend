@@ -4,7 +4,6 @@ env.config();
 
 const url = require("url");
 const path = require("path");
-// const ramda = require("ramda");
 const express = require("express");
 const http = require("http");
 const SocketIO = require("socket.io");
@@ -22,6 +21,7 @@ const animationNamespace = io.of("/animation");
 
 // open monero wallet rpc
 monerojs.openWallet();
+monerojs.checkForPayment();
 
 db.populateTestStreamers();
 
@@ -53,6 +53,16 @@ app.get("/animation/:uid", (request, response) => {
   }
 });
 
+// list for backend
+var toBePaid = [];
+
+function checkPaid() {
+  for (let invoice of toBePaid) {
+  }
+  for (let payment of payments) {
+  }
+}
+
 // ===============================================================
 // Streamer Namespace
 // ===============================================================
@@ -63,15 +73,20 @@ streamerNamespace.on("connection", (socket) => {
     onLogin(socket, hashedSeed, userName).then((response) => {
       //socket.emit("login", response);
       checkDate(response); // set subscription to false if paydate is in past
-      // TODO put subaddress in subscription
       // accountIndex:0; label: userName;
       monerojs.walletRpc
         .createSubaddress(0, response.data.userName) // grab new subaddress
         .then((res) => {
+          // load the subaddress in the response
+          console.log(res);
           response.data.subscription.subaddress = res.state.address;
           response.data.subscription.index = res.state.index;
+
+          // load the information in a list for backend
+          toBePaid.push(res.state);
+          console.log(toBePaid);
         })
-        .then(() => callback(response));
+        .then(() => callback(response)); // give updated Streamer to frontend
     });
   });
 

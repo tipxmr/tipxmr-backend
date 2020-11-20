@@ -52,19 +52,32 @@ async function openWallet() {
   }
 }
 
-async function getSubaddress(wallet) {
+async function checkForPayment() {
   try {
-    const accIndex = 0;
-    const addrIndex = 1;
-    return await wallet.getAddress(accIndex, addrIndex);
+    let payments = await walletRpc.getTransfers({
+      isIncoming: true,
+    });
+    for (var payment of payments) {
+      console.log("payment: ", payment);
+      subaddress = payment.state.address;
+      amount = payment.state.amount;
+      // label = payment.state.
+      console.log(
+        "Transaction incoming: " +
+          (await amount) / Math.pow(10, 12) +
+          " XMR to " +
+          subaddress
+      );
+    }
   } catch (err) {
     console.log(err);
   }
 }
 
-// TODO get subaddress function and import to server.js
+// DONE get subaddress function and import to server.js
+// TODO check if payment for a given subaddress has arrived
 
-module.exports = { walletRpc, createWallet, openWallet, getSubaddress };
+module.exports = { walletRpc, createWallet, openWallet, checkForPayment };
 
 // openWallet()
 //   .then(() => walletRpc.createSubaddress(0, "test"))
