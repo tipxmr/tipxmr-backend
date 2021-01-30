@@ -173,7 +173,11 @@ async function onLogin(socket: Socket, hashedSeed: string, userName: string) {
   return await db.loginStreamer(socket.id, hashedSeed, userName);
 }
 
-function onSubaddressToBackend(data: object) {
+function onSubaddressToBackend(data: {
+  displayName: string;
+  subaddress: string;
+  donatorSocketId: string;
+}) {
   console.log(
     "New subaddress from " + data.displayName + ": " + data.subaddress
   );
@@ -181,8 +185,21 @@ function onSubaddressToBackend(data: object) {
 }
 
 async function onStreamerDisconnectOrTimeout(socket: Socket) {
-  const disconnectedStreamer = await db.getStreamer("socketId", socket.id);
-  if (disconnectedStreamer !== null && disconnectedStreamer !== undefined) {
+  const disconnectedStreamer:
+     {
+        type: string;
+        message: string;
+        data: { displayName: string; hashedSeed: string };
+      }
+    | {
+        type: string;
+        message: string;
+        error: {};
+      } = await db.getStreamer("socketId", socket.id);
+  if (
+    disconnectedStreamer.data !== null &&
+    disconnectedStreamer.data !== undefined
+  ) {
     db.updateOnlineStatusOfStreamer(disconnectedStreamer.hashedSeed, false);
     console.log(
       "streamer: " + disconnectedStreamer.displayName + " disconnected"
