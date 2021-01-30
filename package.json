@@ -4,7 +4,7 @@
   "description": "Backend for TipXMR",
   "scripts": {
     "start": "node server.js",
-    "watch": "./node_modules/nodemon/bin/nodemon.js server.js"
+    "watch": "npx nodemon server.js"
   },
   "keywords": [
     "tipxmr",
