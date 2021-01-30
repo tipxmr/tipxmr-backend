@@ -1,6 +1,6 @@
 const url = require("url");
 const path = require("path");
-
+const cors = require("cors");
 const express = require("express");
 const http = require("http");
 const SocketIO = require("socket.io");
@@ -9,7 +9,12 @@ const db = require("./db");
 
 const app = express();
 const server = http.createServer(app);
-const io = SocketIO(server, { origins: "*:*" });
+const io = SocketIO(server, {
+  cors: {
+    origin: "http://localhost:8080",
+    methods: ["GET", "POST"],
+  },
+});
 
 const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
