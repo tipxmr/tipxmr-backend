@@ -17,6 +17,32 @@ const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const animationNamespace = io.of("/animation");
 
+/* interface success_interface {
+  type: string;
+  message: string;
+  data: object;
+}
+
+interface error_interface {
+  type: string;
+  message: string;
+  error: any;
+} */
+
+type Success = {
+  type: string;
+  message: string;
+  data: object;
+};
+
+type Error = {
+  type: string;
+  message: string;
+  error: any;
+};
+
+type ReturnMask = Success | Error;
+
 db.populateTestStreamers();
 
 app.set("view engine", "pug");
@@ -156,7 +182,7 @@ animationNamespace.on("connection", (socket: Socket) => {
 });
 
 async function onGetAnimationConfig(donatorSocketId: string, userName: string) {
-  const requestedStreamer = await db.getStreamer("userName", userName);
+  const requestedStreamer: any = await db.getStreamer("userName", userName);
   // strip down relevant information for donator
   // only if array is not empty
   let animationSettings = requestedStreamer.docs[0]?.animationSettings ?? {};
@@ -185,24 +211,20 @@ function onSubaddressToBackend(data: {
 }
 
 async function onStreamerDisconnectOrTimeout(socket: Socket) {
-  const disconnectedStreamer:
-     {
-        type: string;
-        message: string;
-        data: { displayName: string; hashedSeed: string };
-      }
-    | {
-        type: string;
-        message: string;
-        error: {};
-      } = await db.getStreamer("socketId", socket.id);
+  const disconnectedStreamer: ReturnMask = await db.getStreamer(
+    "socketId",
+    socket.id
+  );
   if (
     disconnectedStreamer.data !== null &&
     disconnectedStreamer.data !== undefined
   ) {
-    db.updateOnlineStatusOfStreamer(disconnectedStreamer.hashedSeed, false);
+    db.updateOnlineStatusOfStreamer(
+      disconnectedStreamer.data.hashedSeed,
+      false
+    );
     console.log(
-      "streamer: " + disconnectedStreamer.displayName + " disconnected"
+      "streamer: " + disconnectedStreamer.data.displayName + " disconnected"
     );
   }
 }
