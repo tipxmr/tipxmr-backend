@@ -29,19 +29,19 @@ interface error_interface {
   error: any;
 } */
 
-type Success = {
+type Success<T> = {
   type: string;
   message: string;
-  data: any;
+  data: T;
 };
 
-type Error = {
+type Failure<E> = {
   type: string;
   message: string;
-  error: any;
+  error: E;
 };
 
-type ReturnMask = Success | Error;
+type ReturnMask<T, E> = Success<T> | Failure<E>;
 
 db.populateTestStreamers();
 
