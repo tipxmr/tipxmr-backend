@@ -21,6 +21,7 @@ const daemon = connectToDaemonRpc(
 
 import streamerModel from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
+import { Stream } from "stream";
 
 // return code masks
 function return_success<T>(message: string, data: T): Success<T> {
@@ -81,24 +82,28 @@ export async function getStreamer(
       });
       if (streamer.docs.length > 0) {
         return return_success(
-          `Streamer (${streamer.docs[0].userName}) found by ${key}`,
+          `Streamer (${streamer.docs[0].userName}) found by ${[selector]}`,
           streamer.docs[0]
         );
       } else {
         return return_error(
-          `Streamer not found by ${key}`,
+          `Streamer not found by ${[selector]}`,
           new Error("streamer not found")
         );
       }
     } catch (err) {
       console.log(err);
-      return return_error(`Streamer not found by ${key}`, err);
+      return return_error(`Streamer not found by ${[selector]}`, err);
     }
   }
 }
 
-export async function loginStreamer(socketId, hashedSeed, userName = null) {
-  const response = await getStreamer("id", hashedSeed);
+export async function loginStreamer(
+  socketId: string,
+  hashedSeed: string,
+  userName: string | null
+): Promise<ReturnMask<Streamer, Error>> {
+  const response = await getStreamer({ id: hashedSeed });
   // When success, then streamer is already in DB
   if (response.type === "success") {
     return response;
@@ -115,7 +120,7 @@ export async function loginStreamer(socketId, hashedSeed, userName = null) {
     } else {
       return return_error(
         "hashedSeed not found and no userName for userCreation was sent.",
-        "noUserName"
+        new Error("noUserName")
       );
     }
   }
@@ -126,14 +131,14 @@ export async function createStreamer(
   socketId: string,
   hashedSeed: string,
   userName: string
-) {
+): Promise<ReturnMask<Streamer, Error>> {
   try {
     // step 1: check if username ist taken
-    const response = await getStreamer("userName", userName);
+    const response = await getStreamer({ userName });
     // console.log(userDoc);
     if (response.type === "success") {
       console.log(response.data.userName + " is taken");
-      return return_error("userName is taken", "userNameTaken");
+      return return_error("userName is taken", new Error("userNameTaken"));
     } else {
       // step 2: if there is nobody with that username, create the object in the db
       const newStreamer = streamerModel.defaultStreamerConfig;

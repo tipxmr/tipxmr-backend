@@ -1,4 +1,4 @@
-exports.defaultStreamerConfig = {
+export const defaultStreamerConfig = {
   hashedSeed: "", // acts as password for login
   displayName: "", // name to show to donator
   userName: "", // lowercase displayName
