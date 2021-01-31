@@ -1,19 +1,23 @@
 import { v4 as generateUUID } from "uuid";
 import {connectToDaemonRpc} from "monero-javascript";
+import PouchDB from 'pouchdb';
+import * as pouchdbDebug from 'pouchdb-debug';
+import * as pouchdbUpsert from "pouchdb-upsert";
+import * as pouchdbFind from 'pouchdb-find';
+import * as pouchdbAdapterMemory from 'pouchdb-adapter-memory';
+PouchDB.plugin(pouchdbDebug);
+PouchDB.plugin(pouchdbUpsert);
+PouchDB.plugin(pouchdbFind);
+PouchDB.plugin(pouchdbAdapterMemory);
+PouchDB.debug.enable("pouchdb:find");
+
+const db = new PouchDB("streamers", { adapter: "memory" });
+
 const daemon = connectToDaemonRpc(
   "http://node.cryptocano.de:38081",
   "superuser",
   "abctesting123"
 );
-
-const PouchDB = require("pouchdb");
-PouchDB.plugin(require("pouchdb-debug"));
-PouchDB.plugin(require("pouchdb-upsert"));
-PouchDB.plugin(require("pouchdb-find"));
-PouchDB.plugin(require("pouchdb-adapter-memory"));
-
-PouchDB.debug.enable("pouchdb:find");
-const db = new PouchDB("streamers", { adapter: "memory" });
 
 import streamerModel from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
@@ -53,7 +57,7 @@ type ReturnMask = Success | Error;
 // DB operations
 // ===============================================================
 
-async function getStreamer(key: string, value: any): Promise <ReturnMask> {
+export async function getStreamer(key: string, value: any): Promise <ReturnMask> {
   if (key === "id") {
     try {
       const streamer = await db.get(value);
@@ -84,7 +88,7 @@ async function getStreamer(key: string, value: any): Promise <ReturnMask> {
   }
 }
 
-async function loginStreamer(socketId, hashedSeed, userName = null) {
+export async function loginStreamer(socketId, hashedSeed, userName = null) {
   const response = await getStreamer("id", hashedSeed);
   // When success, then streamer is already in DB
   if (response.type === "success") {
@@ -109,7 +113,7 @@ async function loginStreamer(socketId, hashedSeed, userName = null) {
 }
 
 // add a new streamer (register process), username needs to be unique
-async function createStreamer(socketId: string, hashedSeed: string, userName: string) {
+export async function createStreamer(socketId: string, hashedSeed: string, userName: string) {
   try {
     // step 1: check if username ist taken
     const response = await getStreamer("userName", userName);
@@ -136,7 +140,7 @@ async function createStreamer(socketId: string, hashedSeed: string, userName: st
   }
 }
 
-async function updateStreamer(newStreamerConfig) {
+export async function updateStreamer(newStreamerConfig) {
   // can only update existing entries
   try {
     console.log("Updated streamer: " + newStreamerConfig.displayName);
@@ -150,7 +154,7 @@ async function updateStreamer(newStreamerConfig) {
 }
 
 // update online status of streamer
-async function updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus) {
+export async function updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus) {
   // can only update existing entries
   try {
     const streamer = await db.get(hashedSeed);
@@ -171,7 +175,7 @@ async function updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus) {
 
 // display all information of all streamers
 // SUGAR version
-async function showAll() {
+export async function showAll() {
   try {
     const wholeDB = await db.allDocs({ include_docs: true });
     console.log("here is the entire DB");
@@ -182,11 +186,11 @@ async function showAll() {
   }
 }
 
-const where = (selector) => db.find({ selector });
+const where = (selector: any) => db.find({ selector });
 
 const generateAnimationId = () => generateUUID().split("-").join("");
 
-async function populateTestStreamers() {
+export async function populateTestStreamers() {
   const streamers = testStreamers
     .filter((testStreamer) => Object.keys(testStreamer).length)
     .map((testStreamer) => {
@@ -206,15 +210,15 @@ async function populateTestStreamers() {
     .catch(() => console.error("failed"));
 }
 
-const hasStreamingSession = (id) =>
+const hasStreamingSession = (id: string): boolean =>
   where({ animationId: { $eq: id } }).then((result) =>
     Boolean(result.docs.length)
   );
 
-async function getAllOnlineStreamers() {
+export async function getAllOnlineStreamers() {
   // index
   try {
-    let result: = await db.createIndex({
+    let result = await db.createIndex({
       index: {
         fields: ["displayName", "isOnline"],
         ddoc: "name_index",
@@ -251,36 +255,3 @@ async function getAllOnlineStreamers() {
     return return_error("Something went wrong with getAllOnlineStreamers", err);
   }
 }
-
-/* async function createIndex() {
-  try {
-    var result = await db.createIndex({
-      index: {
-        fields: ["userName", "displayName", "hashedSeed", "_id"],
-      },
-    });
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-async function test() {
-  const streamer = await getStreamer(
-    "_id",
-    "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7"
-  );
-  console.log("test", streamer);
-}
-
-populateTestStreamers().then(createIndex).then(test);
- */
-export default {
-  loginStreamer,
-  getStreamer,
-  updateStreamer,
-  updateOnlineStatusOfStreamer,
-  showAll,
-  populateTestStreamers,
-  hasStreamingSession,
-  getAllOnlineStreamers,
-};
