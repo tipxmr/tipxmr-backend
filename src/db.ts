@@ -19,7 +19,7 @@ const daemon = connectToDaemonRpc(
   "abctesting123"
 );
 
-import streamerModel from "./data/defaultStreamerConfig";
+import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
 import { streamerInterface as Streamer } from "./data/streamerInterface";
 
@@ -144,7 +144,7 @@ export async function createStreamer(
       return return_error("userName is taken", new Error("userNameTaken"));
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      const newStreamer = streamerModel.defaultStreamerConfig;
+      const newStreamer = defaultStreamerConfig;
       newStreamer._id = hashedSeed;
       newStreamer.hashedSeed = hashedSeed;
       newStreamer.streamerSocketId = socketId;
