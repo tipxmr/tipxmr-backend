@@ -11,7 +11,7 @@ PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
 PouchDB.debug.enable("pouchdb:find");
 
-const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
+const db = new PouchDB("streamers", { adapter: "memory" });
 
 const daemon = connectToDaemonRpc(
   "http://node.cryptocano.de:38081",
@@ -41,20 +41,21 @@ function return_error<E>(message: string, error: E): Failure<E> {
 }
 
 type Success<T> = {
-  type: string;
-  message: string;
   data: T;
+  message: string;
+  type: string;
 };
 
 type Failure<E> = {
-  type: string;
-  message: string;
   error: E;
+  message: string;
+  type: string;
 };
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
 
 type Streamer = {
+  hashedSeed: string;
   id: string;
   userName: string;
 };
@@ -231,7 +232,7 @@ export async function populateTestStreamers() {
     .catch(() => console.error("failed"));
 }
 
-const hasStreamingSession = (id: string): boolean =>
+export const hasStreamingSession = (id: string): Promise<boolean> =>
   where({ animationId: { $eq: id } }).then((result) =>
     Boolean(result.docs.length)
   );
