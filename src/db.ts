@@ -69,7 +69,7 @@ export async function getStreamer(
 ): Promise<ReturnMask<Streamer, Error>> {
   if (selector.id) {
     try {
-      const streamer = await db.get(selector.id);
+      const streamer = await db.get<Streamer>(selector.id);
       console.log("Found streamer:", streamer.userName);
       return return_success(`Streamer (${streamer.userName}) found`, streamer);
     } catch (err) {
@@ -78,9 +78,7 @@ export async function getStreamer(
     }
   } else {
     try {
-      const streamer = await db.find({
-        selector: selector,
-      });
+      const streamer = await db.find({selector});
       if (streamer.docs.length > 0) {
         return return_success(
           `Streamer (${streamer.docs[0].userName}) found by ${[selector]}`,
@@ -159,7 +157,9 @@ export async function createStreamer(
   }
 }
 
-export async function updateStreamer(newStreamerConfig) {
+export async function updateStreamer(
+  newStreamerConfig
+): Promise<ReturnMask<Streamer, Error>> {
   // can only update existing entries
   try {
     console.log("Updated streamer: " + newStreamerConfig.displayName);
@@ -212,7 +212,7 @@ const where = (selector: any) => db.find({ selector });
 
 const generateAnimationId = () => generateUUID().split("-").join("");
 
-export async function populateTestStreamers() {
+export async function populateTestStreamers(): Promise<Streamer> {
   const streamers = testStreamers
     .filter((testStreamer) => Object.keys(testStreamer).length)
     .map((testStreamer) => {
@@ -240,7 +240,7 @@ export const hasStreamingSession = (id: string): Promise<boolean> =>
 export async function getAllOnlineStreamers() {
   // index
   try {
-    let result = await db.createIndex({
+    const result = await db.createIndex({
       index: {
         fields: ["displayName", "isOnline"],
         ddoc: "name_index",
