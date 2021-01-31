@@ -22,6 +22,7 @@ const daemon = connectToDaemonRpc(
 import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
 import { streamerInterface as Streamer } from "./data/streamerInterface";
+import { Stream } from "stream";
 
 // return code masks
 function return_success<T>(message: string, data: T): Success<T> {
@@ -71,9 +72,9 @@ type ReturnMask<T, E> = Success<T> | Failure<E>;
 export async function getStreamer(
   selector: Partial<Streamer>
 ): Promise<ReturnMask<Streamer, Error>> {
-  if (selector.id) {
+  if (selector.hashedSeed) {
     try {
-      const streamer = await db.get<Streamer>(selector.id);
+      const streamer = await db.get<Streamer>(selector.hashedSeed);
       console.log("Found streamer:", streamer.userName);
       return return_success(`Streamer (${streamer.userName}) found`, streamer);
     } catch (err) {
@@ -82,11 +83,12 @@ export async function getStreamer(
     }
   } else {
     try {
-      const streamer = await db.find({ selector });
-      if (streamer.docs.length > 0) {
+      const streamerFind = await db.find({ selector });
+      if (streamerFind.docs.length > 0) {
+        const streamer: Streamer = streamerFind.docs[0];
         return return_success(
-          `Streamer (${streamer.docs[0].userName}) found by ${[selector]}`,
-          streamer.docs[0]
+          `Streamer (${streamer.userName}) found by ${[selector]}`,
+          streamer
         );
       } else {
         return return_error(
