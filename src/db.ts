@@ -1,17 +1,17 @@
 import { v4 as generateUUID } from "uuid";
-import {connectToDaemonRpc} from "monero-javascript";
-import PouchDB from 'pouchdb';
-import * as pouchdbDebug from 'pouchdb-debug';
+import { connectToDaemonRpc } from "monero-javascript";
+import PouchDB from "pouchdb";
+import * as pouchdbDebug from "pouchdb-debug";
 import * as pouchdbUpsert from "pouchdb-upsert";
-import * as pouchdbFind from 'pouchdb-find';
-import * as pouchdbAdapterMemory from 'pouchdb-adapter-memory';
+import * as pouchdbFind from "pouchdb-find";
+import * as pouchdbAdapterMemory from "pouchdb-adapter-memory";
 PouchDB.plugin(pouchdbDebug);
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
 PouchDB.debug.enable("pouchdb:find");
 
-const db = new PouchDB("streamers", { adapter: "memory" });
+const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
 
 const daemon = connectToDaemonRpc(
   "http://node.cryptocano.de:38081",
@@ -23,7 +23,7 @@ import streamerModel from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
 
 // return code masks
-function return_success(message: string, data: any = {}) {
+function return_success<T>(message: string, data: T): Success<T> {
   return {
     type: "success",
     message,
@@ -31,7 +31,7 @@ function return_success(message: string, data: any = {}) {
   };
 }
 
-function return_error(message: string, error: any = {}) {
+function return_error<E>(message: string, error: E): Failure<E> {
   return {
     type: "error",
     message,
@@ -39,28 +39,35 @@ function return_error(message: string, error: any = {}) {
   };
 }
 
-type Success = {
+type Success<T> = {
   type: string;
   message: string;
-  data: object;
+  data: T;
 };
 
-type Error = {
+type Failure<E> = {
   type: string;
   message: string;
-  error: any;
+  error: E;
 };
 
-type ReturnMask = Success | Error;
+type ReturnMask<T, E> = Success<T> | Failure<E>;
+
+type Streamer = {
+  id: string;
+  userName: string;
+};
 
 // ===============================================================
 // DB operations
 // ===============================================================
 
-export async function getStreamer(key: string, value: any): Promise <ReturnMask> {
-  if (key === "id") {
+export async function getStreamer(
+  selector: Partial<Streamer>
+): Promise<ReturnMask<Streamer, Error>> {
+  if (selector.id) {
     try {
-      const streamer = await db.get(value);
+      const streamer = await db.get(selector.id);
       console.log("Found streamer:", streamer.userName);
       return return_success(`Streamer (${streamer.userName}) found`, streamer);
     } catch (err) {
@@ -68,18 +75,20 @@ export async function getStreamer(key: string, value: any): Promise <ReturnMask>
       return return_error("Streamer not found by hashedSeed", err);
     }
   } else {
-    const selector = { [key]: value };
     try {
       const streamer = await db.find({
         selector: selector,
       });
       if (streamer.docs.length > 0) {
         return return_success(
-          `Streamer (${streamer.userName}) found by ${key}`,
+          `Streamer (${streamer.docs[0].userName}) found by ${key}`,
           streamer.docs[0]
         );
       } else {
-        return return_error(`Streamer not found by ${key}`, "notFound");
+        return return_error(
+          `Streamer not found by ${key}`,
+          new Error("streamer not found")
+        );
       }
     } catch (err) {
       console.log(err);
@@ -113,7 +122,11 @@ export async function loginStreamer(socketId, hashedSeed, userName = null) {
 }
 
 // add a new streamer (register process), username needs to be unique
-export async function createStreamer(socketId: string, hashedSeed: string, userName: string) {
+export async function createStreamer(
+  socketId: string,
+  hashedSeed: string,
+  userName: string
+) {
   try {
     // step 1: check if username ist taken
     const response = await getStreamer("userName", userName);
@@ -154,7 +167,10 @@ export async function updateStreamer(newStreamerConfig) {
 }
 
 // update online status of streamer
-export async function updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus) {
+export async function updateOnlineStatusOfStreamer(
+  hashedSeed,
+  newOnlineStatus
+) {
   // can only update existing entries
   try {
     const streamer = await db.get(hashedSeed);
