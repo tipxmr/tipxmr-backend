@@ -21,7 +21,7 @@ const daemon = connectToDaemonRpc(
 
 import streamerModel from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
-import { Stream } from "stream";
+import { streamerInterface as Streamer } from "./data/streamerInterface";
 
 // return code masks
 function return_success<T>(message: string, data: T): Success<T> {
@@ -40,6 +40,10 @@ function return_error<E>(message: string, error: E): Failure<E> {
   };
 }
 
+// ===============================================================
+// Types
+// ===============================================================
+
 type Success<T> = {
   data: T;
   message: string;
@@ -54,11 +58,11 @@ type Failure<E> = {
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
 
-type Streamer = {
+/* type Streamer = {
   hashedSeed: string;
   id: string;
   userName: string;
-};
+}; */
 
 // ===============================================================
 // DB operations
@@ -78,7 +82,7 @@ export async function getStreamer(
     }
   } else {
     try {
-      const streamer = await db.find({selector});
+      const streamer = await db.find({ selector });
       if (streamer.docs.length > 0) {
         return return_success(
           `Streamer (${streamer.docs[0].userName}) found by ${[selector]}`,
@@ -102,7 +106,7 @@ export async function loginStreamer(
   hashedSeed: string,
   userName: string | null
 ): Promise<ReturnMask<Streamer, Error>> {
-  const response = await getStreamer({ id: hashedSeed });
+  const response = await getStreamer({ hashedSeed });
   // When success, then streamer is already in DB
   if (response.type === "success") {
     return response;
@@ -158,7 +162,7 @@ export async function createStreamer(
 }
 
 export async function updateStreamer(
-  newStreamerConfig
+  newStreamerConfig: Streamer
 ): Promise<ReturnMask<Streamer, Error>> {
   // can only update existing entries
   try {
@@ -174,8 +178,8 @@ export async function updateStreamer(
 
 // update online status of streamer
 export async function updateOnlineStatusOfStreamer(
-  hashedSeed,
-  newOnlineStatus
+  hashedSeed: string,
+  newOnlineStatus: boolean
 ) {
   // can only update existing entries
   try {

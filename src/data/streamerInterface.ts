@@ -1,4 +1,4 @@
-export interface defaultStreamerConfig {
+export interface streamerInterface {
   animationSettings: {
     bgImg: string;
     charLimit: number;
