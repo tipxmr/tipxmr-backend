@@ -17,28 +17,20 @@ const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const animationNamespace = io.of("/animation");
 
-/* interface success_interface {
-  type: string;
-  message: string;
-  data: object;
-}
-
-interface error_interface {
-  type: string;
-  message: string;
-  error: any;
-} */
+// ===============================================================
+// Types
+// ===============================================================
 
 type Success<T> = {
-  type: string;
-  message: string;
   data: T;
+  message: string;
+  type: string;
 };
 
 type Failure<E> = {
-  type: string;
-  message: string;
   error: E;
+  message: string;
+  type: string;
 };
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
