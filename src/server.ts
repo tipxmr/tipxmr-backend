@@ -35,6 +35,12 @@ type Failure<E> = {
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
 
+type Streamer = {
+  hashedSeed: string;
+  id: string;
+  userName: string;
+};
+
 db.populateTestStreamers();
 
 app.set("view engine", "pug");
@@ -174,10 +180,12 @@ animationNamespace.on("connection", (socket: Socket) => {
 });
 
 async function onGetAnimationConfig(donatorSocketId: string, userName: string) {
-  const requestedStreamer: any = await db.getStreamer("userName", userName);
+  const requestedStreamer: ReturnMask<Streamer, Error> = await db.getStreamer({
+    userName,
+  });
   // strip down relevant information for donator
   // only if array is not empty
-  let animationSettings = requestedStreamer.docs[0]?.animationSettings ?? {};
+  const animationSettings = requestedStreamer.docs[0]?.animationSettings ?? {};
   animationNamespace
     .to(donatorSocketId)
     .emit("getAnimationConfig", animationSettings);
@@ -193,8 +201,8 @@ async function onLogin(socket: Socket, hashedSeed: string, userName: string) {
 
 function onSubaddressToBackend(data: {
   displayName: string;
-  subaddress: string;
   donatorSocketId: string;
+  subaddress: string;
 }) {
   console.log(
     "New subaddress from " + data.displayName + ": " + data.subaddress
@@ -203,10 +211,10 @@ function onSubaddressToBackend(data: {
 }
 
 async function onStreamerDisconnectOrTimeout(socket: Socket) {
-  const disconnectedStreamer: ReturnMask = await db.getStreamer(
-    "socketId",
-    socket.id
-  );
+  const disconnectedStreamer: ReturnMask<
+    Streamer,
+    Error
+  > = await db.getStreamer({ hashedSeed: socket.id });
   if (
     disconnectedStreamer.data !== null &&
     disconnectedStreamer.data !== undefined
@@ -221,7 +229,7 @@ async function onStreamerDisconnectOrTimeout(socket: Socket) {
   }
 }
 
-function onPaymentRecieved(newDonation: object) {
+function onPaymentRecieved(newDonation: any) {
   console.log(
     "Recieved new donation from " +
       newDonation.donor +
@@ -242,7 +250,7 @@ async function onGetStreamer(donatorSocketId: string, userName: string) {
       userName +
       "."
   );
-  const requestedStreamer = await db.getStreamer("userName", userName);
+  const requestedStreamer = await db.getStreamer({userName});
   console.log("requestedStreamer", requestedStreamer);
   // strip down relevant information for donator
   // only if array is not empty
@@ -278,7 +286,7 @@ async function onGetSubaddress(socket: Socket, data: any) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
-  const requestedStreamer = await db.getStreamer("userName", data.userName);
+  const requestedStreamer = await db.getStreamer({userName: data.userName});
   if (
     requestedStreamer.docs[0] !== undefined &&
     requestedStreamer.docs[0].isOnline === true
