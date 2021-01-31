@@ -32,7 +32,7 @@ interface error_interface {
 type Success = {
   type: string;
   message: string;
-  data: object;
+  data: any;
 };
 
 type Error = {
@@ -282,7 +282,7 @@ async function onGetStreamer(donatorSocketId: string, userName: string) {
   }
 }
 
-async function onGetSubaddress(socket: Socket, data: object) {
+async function onGetSubaddress(socket: Socket, data: any) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
