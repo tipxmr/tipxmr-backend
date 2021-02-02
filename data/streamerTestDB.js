@@ -89,10 +89,10 @@ const grischa = {
   },
 };
 
-const jonas = {
+const pronas = {
   hashedSeed: "", // acts as password for login
-  displayName: "JonasInDaHauß", // name to show to donator
-  userName: "jonasindahauß", // lowercase displayName
+  displayName: "Pronas", // name to show to donator
+  userName: "pronas", // lowercase displayName
   isOnline: false, // show if streamer is currently able to recieve payments
   streamerSocketId: "",
   creationDate: null, // track since when the user is registered
@@ -131,6 +131,6 @@ const jonas = {
 
 exports.alex = alex;
 exports.grischa = grischa;
-exports.jonas = jonas;
+exports.pronas = pronas;
 
-module.exports = [alex, grischa, jonas];
+module.exports = [alex, grischa, pronas];
