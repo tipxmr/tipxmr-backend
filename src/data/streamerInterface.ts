@@ -25,7 +25,7 @@ export interface StreamerInterface {
     totalDonations: number;
   };
   isOnline: boolean;
-  isPremium: false;
+  isPremium: boolean;
   profilePicture: string;
   restoreHeight: number;
   stream: {
