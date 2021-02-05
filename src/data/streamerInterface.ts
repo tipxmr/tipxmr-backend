@@ -1,4 +1,5 @@
-export interface streamerInterface {
+export interface StreamerInterface {
+  _id: string;
   animationSettings: {
     bgImg: string;
     charLimit: number;
@@ -16,14 +17,13 @@ export interface streamerInterface {
     showGoal: boolean;
     sound: string;
   };
-  creationDate: string;
+  creationDate: Date;
   displayName: string;
   donationStats: {
     allDonations: any[];
     largestDonation: number;
     totalDonations: number;
   };
-  hashedSeed: string;
   isOnline: boolean;
   isPremium: false;
   profilePicture: string;

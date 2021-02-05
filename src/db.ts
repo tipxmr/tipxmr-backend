@@ -21,8 +21,7 @@ const daemon = connectToDaemonRpc(
 
 import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import testStreamers from "./data/streamerTestDB";
-import { streamerInterface as Streamer } from "./data/streamerInterface";
-import { Stream } from "stream";
+import { StreamerInterface as Streamer } from "./data/streamerInterface";
 
 // return code masks
 function return_success<T>(message: string, data: T): Success<T> {
@@ -59,12 +58,6 @@ type Failure<E> = {
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
 
-/* type Streamer = {
-  hashedSeed: string;
-  id: string;
-  userName: string;
-}; */
-
 // ===============================================================
 // DB operations
 // ===============================================================
@@ -72,14 +65,14 @@ type ReturnMask<T, E> = Success<T> | Failure<E>;
 export async function getStreamer(
   selector: Partial<Streamer>
 ): Promise<ReturnMask<Streamer, Error>> {
-  if (selector.hashedSeed) {
+  if (selector._id) {
     try {
-      const streamer = await db.get<Streamer>(selector.hashedSeed);
+      const streamer = await db.get<Streamer>(selector._id);
       console.log("Found streamer:", streamer.userName);
       return return_success(`Streamer (${streamer.userName}) found`, streamer);
     } catch (err) {
       console.log(err);
-      return return_error("Streamer not found by hashedSeed", err);
+      return return_error("Streamer not found by _id", err);
     }
   } else {
     try {
@@ -105,18 +98,18 @@ export async function getStreamer(
 
 export async function loginStreamer(
   socketId: string,
-  hashedSeed: string,
+  _id: string,
   userName: string | null
 ): Promise<ReturnMask<Streamer, Error>> {
-  const response = await getStreamer({ hashedSeed });
+  const response = await getStreamer({ _id });
   // When success, then streamer is already in DB
   if (response.type === "success") {
     return response;
   } else {
-    // hashedSeed is not registered in DB, so create new User
+    // _id is not registered in DB, so create new User
     if (userName) {
       console.log("streamer not found in db, creating new user now");
-      const response = await createStreamer(socketId, hashedSeed, userName);
+      const response = await createStreamer(socketId, _id, userName);
       if (response.type === "success") {
         return return_success("New StreamerConfig created", response.data);
       } else {
@@ -124,7 +117,7 @@ export async function loginStreamer(
       }
     } else {
       return return_error(
-        "hashedSeed not found and no userName for userCreation was sent.",
+        "_id not found and no userName for userCreation was sent.",
         new Error("noUserName")
       );
     }
@@ -134,7 +127,7 @@ export async function loginStreamer(
 // add a new streamer (register process), username needs to be unique
 export async function createStreamer(
   socketId: string,
-  hashedSeed: string,
+  _id: string,
   userName: string
 ): Promise<ReturnMask<Streamer, Error>> {
   try {
@@ -147,8 +140,7 @@ export async function createStreamer(
     } else {
       // step 2: if there is nobody with that username, create the object in the db
       const newStreamer = defaultStreamerConfig;
-      newStreamer._id = hashedSeed;
-      newStreamer.hashedSeed = hashedSeed;
+      newStreamer._id = _id;
       newStreamer.streamerSocketId = socketId;
       newStreamer.userName = userName;
       newStreamer.restoreHeight = await daemon.getHeight();
@@ -165,29 +157,28 @@ export async function createStreamer(
 
 export async function updateStreamer(
   newStreamerConfig: Streamer
-): Promise<ReturnMask<Streamer, Error>> {
-  // can only update existing entries
+): Promise<ReturnMask<PouchDB.UpsertResponse, Error>> {
   try {
     console.log("Updated streamer: " + newStreamerConfig.displayName);
-    return db.upsert(newStreamerConfig._id, () => {
+    const succ = db.upsert(newStreamerConfig._id, () => {
       return newStreamerConfig;
     });
+    return return_success(`Updated ${newStreamerConfig.userName} successful`, succ);
   } catch (err) {
-    console.log("Error in updateStreamer", err);
-    return return_error("Error in updateStreamer", err);
+    return return_error('Error with updateStreamer', err);
   }
 }
 
 // update online status of streamer
 export async function updateOnlineStatusOfStreamer(
-  hashedSeed: string,
+  _id: string,
   newOnlineStatus: boolean
-) {
+): Promise<ReturnMask<PouchDB.UpsertResponse, Error>> {
   // can only update existing entries
   try {
-    const streamer = await db.get(hashedSeed);
+    const streamer = await db.get<Streamer>(_id);
     streamer.isOnline = newOnlineStatus;
-    return db.upsert(streamer._id, function () {
+    const succ =  db.upsert(streamer._id, function () {
       if (newOnlineStatus) {
         console.log(streamer.displayName + " went online");
       } else {
@@ -195,6 +186,7 @@ export async function updateOnlineStatusOfStreamer(
       }
       return streamer;
     });
+    return return_success('Success updateOnlineStatusOfStreamer', succ);
   } catch (err) {
     console.log("Error in updateOnlineStatusOfStreamer", err);
     return return_error("Error in updateOnlineStatusOfStreamer", err);
@@ -227,7 +219,7 @@ export async function populateTestStreamers(): Promise<Streamer> {
       return {
         ...testStreamer,
         animationId,
-        _id: testStreamer.hashedSeed,
+        _id: testStreamer._id,
       };
     });
 

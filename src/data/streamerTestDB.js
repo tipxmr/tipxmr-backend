@@ -5,7 +5,7 @@ Jonas:
 */
 
 const alex = {
-  hashedSeed:
+  _id:
     "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7", // acts as password for login
   displayName: "AlexAnarcho", // name to show to donator
   userName: "alexanarcho", // lowercase displayName
@@ -48,7 +48,7 @@ const alex = {
 };
 
 const grischa = {
-  hashedSeed:
+  _id:
     "b8185a25bbe3b4206e490558ab50b0567deca446d15282e92c5c66fde6693399", // acts as password for login
   displayName: "hundehausen", // name to show to donator
   userName: "hundehausen", // lowercase displayName
@@ -90,7 +90,7 @@ const grischa = {
 };
 
 const jonas = {
-  hashedSeed: "", // acts as password for login
+  _id: "", // acts as password for login
   displayName: "JonasInDaHauß", // name to show to donator
   userName: "jonasindahauß", // lowercase displayName
   isOnline: false, // show if streamer is currently able to recieve payments
