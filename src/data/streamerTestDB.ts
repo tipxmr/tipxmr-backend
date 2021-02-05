@@ -1,8 +1,3 @@
-/* 
-Alex: fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7
-Grischa: b8185a25bbe3b4206e490558ab50b0567deca446d15282e92c5c66fde6693399
-Pronas: 
-*/
 import { StreamerInterface as Streamer } from "./streamerInterface";
 const alex: Streamer = {
   _id: "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7",
@@ -30,6 +25,9 @@ const alex: Streamer = {
     largestDonation: 0,
     totalDonations: 0,
   },
+  isOnline: false,
+  isPremium: true,
+  restoreHeight: 667580,
   stream: {
     category: "politics",
     description: "I am a great streamer.",
