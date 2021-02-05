@@ -3,6 +3,7 @@ import express from "express";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
 import * as db from "./db";
+import { StreamerInterface as Streamer } from "./data/streamerInterface";
 
 const app = express();
 const httpServer = createServer(app);
@@ -34,12 +35,6 @@ type Failure<E> = {
 };
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
-
-type Streamer = {
-  hashedSeed: string;
-  id: string;
-  userName: string;
-};
 
 db.populateTestStreamers();
 
@@ -76,9 +71,9 @@ app.get("/animation/:uid", (request, response) => {
 // ===============================================================
 
 streamerNamespace.on("connection", (socket: Socket) => {
-  // streamer requests config at login by giving his hashedSeed
-  socket.on("login", ({ hashedSeed, userName }, callback) => {
-    onLogin(socket, hashedSeed, userName).then((response) => {
+  // streamer requests config at login by giving his _id
+  socket.on("login", ({ _id, userName }, callback) => {
+    onLogin(socket, _id, userName).then((response) => {
       //socket.emit("login", response);
       callback(response);
     });
@@ -104,8 +99,8 @@ streamerNamespace.on("connection", (socket: Socket) => {
     db.updateStreamer(newStreamerConfig);
   });
 
-  socket.on("updateOnlineStatus", ({ hashedSeed, newOnlineStatus }) => {
-    db.updateOnlineStatusOfStreamer(hashedSeed, newOnlineStatus);
+  socket.on("updateOnlineStatus", ({ _id, newOnlineStatus }) => {
+    db.updateOnlineStatusOfStreamer(_id, newOnlineStatus);
   });
 
   // TODO: use proper streamer, donator and ?animator socket namespaces
@@ -195,8 +190,8 @@ async function onGetAnimationConfig(donatorSocketId: string, userName: string) {
 // All Functions
 // ===============================================================
 
-async function onLogin(socket: Socket, hashedSeed: string, userName: string) {
-  return await db.loginStreamer(socket.id, hashedSeed, userName);
+async function onLogin(socket: Socket, _id: string, userName: string) {
+  return await db.loginStreamer(socket.id, _id, userName);
 }
 
 function onSubaddressToBackend(data: {
@@ -211,18 +206,13 @@ function onSubaddressToBackend(data: {
 }
 
 async function onStreamerDisconnectOrTimeout(socket: Socket) {
-  const disconnectedStreamer: ReturnMask<
-    Streamer,
-    Error
-  > = await db.getStreamer({ hashedSeed: socket.id });
-  if (
-    disconnectedStreamer.data !== null &&
-    disconnectedStreamer.data !== undefined
-  ) {
-    db.updateOnlineStatusOfStreamer(
-      disconnectedStreamer.data.hashedSeed,
-      false
-    );
+  const response = await db.getStreamer({ streamerSocketId: socket.id });
+  if (response.type === 'success') {
+    
+  }
+
+  if (data !== null && data !== undefined) {
+    db.updateOnlineStatusOfStreamer(disconnectedStreamer.data._id, false);
     console.log(
       "streamer: " + disconnectedStreamer.data.displayName + " disconnected"
     );
@@ -250,7 +240,7 @@ async function onGetStreamer(donatorSocketId: string, userName: string) {
       userName +
       "."
   );
-  const requestedStreamer = await db.getStreamer({userName});
+  const requestedStreamer = await db.getStreamer({ userName });
   console.log("requestedStreamer", requestedStreamer);
   // strip down relevant information for donator
   // only if array is not empty
@@ -258,7 +248,7 @@ async function onGetStreamer(donatorSocketId: string, userName: string) {
     const returnStreamerToDonator = {
       userName: requestedStreamer.userName,
       displayName: requestedStreamer.displayName,
-      hashedSeed: requestedStreamer.hashedSeed,
+      _id: requestedStreamer._id,
       isOnline: requestedStreamer.isOnline,
       secondPrice: requestedStreamer.animationSettings.secondPrice,
       charPrice: requestedStreamer.animationSettings.charPrice,
@@ -286,7 +276,7 @@ async function onGetSubaddress(socket: Socket, data: any) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
-  const requestedStreamer = await db.getStreamer({userName: data.userName});
+  const requestedStreamer = await db.getStreamer({ userName: data.userName });
   if (
     requestedStreamer.docs[0] !== undefined &&
     requestedStreamer.docs[0].isOnline === true
