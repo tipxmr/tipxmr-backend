@@ -43,7 +43,7 @@ export async function getStreamer(
       const streamerFind = await db.find({
         selector,
       });
-      if (streamerFind.docs.length > 0) {
+      if (streamerFind.docs.length) {
         const streamer = streamerFind.docs[0];
         return success(streamer);
       } else {

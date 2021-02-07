@@ -1,4 +1,4 @@
-import { StreamerInterface as Streamer } from "./streamerInterface";
+import { Streamer } from "./streamerInterface";
 
 const alex: Streamer = {
   _id: "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7",
