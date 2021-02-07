@@ -20,7 +20,7 @@ const daemon = connectToDaemonRpc(
 );
 
 import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
-import testStreamers from "./data/streamerTestDB";
+import { testStreamers } from "./data/streamerTestDB";
 import { StreamerInterface as Streamer } from "./data/streamerInterface";
 
 // return code masks
@@ -163,9 +163,12 @@ export async function updateStreamer(
     const succ = db.upsert(newStreamerConfig._id, () => {
       return newStreamerConfig;
     });
-    return return_success(`Updated ${newStreamerConfig.userName} successful`, succ);
+    return return_success(
+      `Updated ${newStreamerConfig.userName} successful`,
+      succ
+    );
   } catch (err) {
-    return return_error('Error with updateStreamer', err);
+    return return_error("Error with updateStreamer", err);
   }
 }
 
@@ -178,7 +181,7 @@ export async function updateOnlineStatusOfStreamer(
   try {
     const streamer = await db.get<Streamer>(_id);
     streamer.isOnline = newOnlineStatus;
-    const succ =  db.upsert(streamer._id, function () {
+    const succ = db.upsert(streamer._id, function () {
       if (newOnlineStatus) {
         console.log(streamer.displayName + " went online");
       } else {
@@ -186,7 +189,7 @@ export async function updateOnlineStatusOfStreamer(
       }
       return streamer;
     });
-    return return_success('Success updateOnlineStatusOfStreamer', succ);
+    return return_success("Success updateOnlineStatusOfStreamer", succ);
   } catch (err) {
     console.log("Error in updateOnlineStatusOfStreamer", err);
     return return_error("Error in updateOnlineStatusOfStreamer", err);
@@ -210,7 +213,7 @@ const where = (selector: any) => db.find({ selector });
 
 const generateAnimationId = () => generateUUID().split("-").join("");
 
-export async function populateTestStreamers(): Promise<Streamer> {
+export async function populateTestStreamers(): Promise<PouchDB.Database<{}>> {
   const streamers = testStreamers
     .filter((testStreamer) => Object.keys(testStreamer).length)
     .map((testStreamer) => {

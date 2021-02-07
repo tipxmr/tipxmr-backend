@@ -1,4 +1,5 @@
 import { StreamerInterface as Streamer } from "./streamerInterface";
+
 const alex: Streamer = {
   _id: "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7",
   animationSettings: {
@@ -27,6 +28,8 @@ const alex: Streamer = {
   },
   isOnline: false,
   isPremium: true,
+  profilePicture:
+    "data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
   restoreHeight: 667580,
   stream: {
     category: "politics",
@@ -37,8 +40,6 @@ const alex: Streamer = {
   },
   streamerSocketId: "",
   userName: "alexanarcho",
-  profilePicture:
-    "data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
 };
 
 const grischa: Streamer = {
@@ -123,8 +124,4 @@ const pronas: Streamer = {
   userName: "pronas",
 };
 
-exports.alex = alex;
-exports.grischa = grischa;
-exports.pronas = pronas;
-
-module.exports = [alex, grischa, pronas];
+export const testStreamers = [alex, grischa, pronas];
