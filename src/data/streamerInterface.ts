@@ -1,4 +1,4 @@
-export interface StreamerInterface {
+export type Streamer = {
   _id: string;
   animationSettings: {
     bgImg: string;
@@ -37,4 +37,4 @@ export interface StreamerInterface {
   };
   streamerSocketId: string;
   userName: string;
-}
+};

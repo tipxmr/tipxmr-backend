@@ -1,5 +1,5 @@
-import { StreamerInterface } from "./streamerInterface";
-export const defaultStreamerConfig: StreamerInterface = {
+import { Streamer } from "./streamerInterface";
+export const defaultStreamerConfig: Streamer = {
   _id: "",
   animationSettings: {
     bgImg: "",
