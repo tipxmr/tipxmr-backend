@@ -61,6 +61,7 @@ export async function loginStreamer(
   _id: string,
   userName: string | null
 ): Promise<Result<Streamer, Error>> {
+  console.log(socketId, _id, userName);
   const result = await getStreamer({ _id });
   // When success, then streamer is already in DB
   if (result.isSuccess()) {
@@ -73,11 +74,11 @@ export async function loginStreamer(
       if (result.isSuccess()) {
         return result;
       } else {
-        return failure(new Error("stremer could not be created"));
+        return failure(new Error("Username is already taken"));
       }
     } else {
       return failure(
-        new Error("_id not found and no userName for userCreation was sent.")
+        new Error("_id not found and no userName for userCreation was sent")
       );
     }
   }
