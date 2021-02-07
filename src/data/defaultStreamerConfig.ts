@@ -1,4 +1,4 @@
-import { Streamer } from "./streamerInterface";
+import { Streamer } from "./Streamer";
 export const defaultStreamerConfig: Streamer = {
   _id: "",
   animationSettings: {

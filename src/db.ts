@@ -2,9 +2,9 @@ import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
 import PouchDB from "pouchdb";
-import * as pouchdbUpsert from "pouchdb-upsert";
-import * as pouchdbFind from "pouchdb-find";
-import * as pouchdbAdapterMemory from "pouchdb-adapter-memory";
+import pouchdbUpsert from "pouchdb-upsert";
+import pouchdbFind from "pouchdb-find";
+import pouchdbAdapterMemory from "pouchdb-adapter-memory";
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
@@ -19,7 +19,7 @@ const daemon = connectToDaemonRpc(
 
 import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import { testStreamers } from "./data/streamerTestDB";
-import { Streamer } from "./data/streamerInterface";
+import { Streamer } from "./data/Streamer";
 import { success, failure, Result } from "./results";
 
 // ===============================================================

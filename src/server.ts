@@ -2,7 +2,6 @@ import express from "express";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
 import * as db from "./db";
-import { Streamer } from "./data/streamerInterface";
 
 const app = express();
 const httpServer = createServer(app);
