@@ -1,9 +1,8 @@
-import * as path from "path";
 import express from "express";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
 import * as db from "./db";
-import { StreamerInterface as Streamer } from "./data/streamerInterface";
+import { Streamer } from "./data/streamerInterface";
 
 const app = express();
 const httpServer = createServer(app);
@@ -18,61 +17,7 @@ const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const animationNamespace = io.of("/animation");
 
-// ===============================================================
-// Types
-// ===============================================================
-
-type Success<T> = {
-  data: T;
-  message: string;
-  type: string;
-};
-
-type Failure<E> = {
-  error: E;
-  message: string;
-  type: string;
-};
-
-type ReturnMask<T, E> = Success<T> | Failure<E>;
-
-const isSuccess = (response: ReturnMask<T, E>): boolean => {
-  return response.type === "success";
-}
-
-const isError = (response: ReturnMask<T, E>): boolean => {
-  return response.type === "error";
-}
-
 db.populateTestStreamers();
-
-app.set("view engine", "pug");
-
-app.use("/public", express.static(path.join(__dirname, "public")));
-
-app.get("/", (request, response) => {
-  response.send("Hello there");
-});
-
-app.get("/animation/:uid", (request, response) => {
-  const { uid } = request.params;
-
-  if (uid) {
-    db.hasStreamingSession(uid)
-      .then((isValid: boolean) => {
-        if (isValid) {
-          response.render("animation");
-        } else {
-          response.send("invalid");
-        }
-      })
-      .catch(() => {
-        response.send("error");
-      });
-  } else {
-    response.redirect("/");
-  }
-});
 
 // ===============================================================
 // Streamer Namespace
@@ -183,15 +128,17 @@ animationNamespace.on("connection", (socket: Socket) => {
 });
 
 async function onGetAnimationConfig(donatorSocketId: string, userName: string) {
-  const requestedStreamer: ReturnMask<Streamer, Error> = await db.getStreamer({
+  const requestedStreamer = await db.getStreamer({
     userName,
   });
   // strip down relevant information for donator
   // only if array is not empty
-  const animationSettings = requestedStreamer.docs[0]?.animationSettings ?? {};
-  animationNamespace
-    .to(donatorSocketId)
-    .emit("getAnimationConfig", animationSettings);
+  if (requestedStreamer.isSuccess()) {
+    const { animationSettings } = requestedStreamer.unwrap();
+    animationNamespace
+      .to(donatorSocketId)
+      .emit("getAnimationConfig", animationSettings);
+  }
 }
 
 // ===============================================================
@@ -214,25 +161,17 @@ function onSubaddressToBackend(data: {
 }
 
 async function onStreamerDisconnectOrTimeout(socket: Socket) {
-  const response = await db.getStreamer({ streamerSocketId: socket.id });
-  if (typeof response === ) {
-    
-  }
-
-  if (data !== null && data !== undefined) {
-    db.updateOnlineStatusOfStreamer(disconnectedStreamer.data._id, false);
-    console.log(
-      "streamer: " + disconnectedStreamer.data.displayName + " disconnected"
-    );
+  const result = await db.getStreamer({ streamerSocketId: socket.id });
+  if (result.isSuccess()) {
+    const streamer = result.unwrap();
+    db.updateOnlineStatusOfStreamer(streamer._id, false);
+    console.log(`${streamer.displayName} disconnected"`);
   }
 }
 
 function onPaymentRecieved(newDonation: any) {
   console.log(
-    "Recieved new donation from " +
-      newDonation.donor +
-      " to " +
-      newDonation.displayName
+    `Recieved new donation from ${newDonation.donor} to ${newDonation.displayName}`
   );
   donatorNamespace
     .to(newDonation.donatorSocketId)
@@ -242,17 +181,14 @@ function onPaymentRecieved(newDonation: any) {
 // donator callbacks
 async function onGetStreamer(donatorSocketId: string, userName: string) {
   console.log(
-    "Donator (" +
-      donatorSocketId +
-      ") requested streamer info from " +
-      userName +
-      "."
+    `Donator (${donatorSocketId}) requested streamer info from ${userName}`
   );
-  const requestedStreamer = await db.getStreamer({ userName });
-  console.log("requestedStreamer", requestedStreamer);
+  const result = await db.getStreamer({ userName });
+
   // strip down relevant information for donator
   // only if array is not empty
-  if (requestedStreamer.docs.length) {
+  if (result.isSuccess()) {
+    const requestedStreamer = result.unwrap();
     const returnStreamerToDonator = {
       userName: requestedStreamer.userName,
       displayName: requestedStreamer.displayName,
@@ -284,16 +220,15 @@ async function onGetSubaddress(socket: Socket, data: any) {
   console.log(
     data.donor + " requested subaddress of streamer: " + data.displayName
   );
-  const requestedStreamer = await db.getStreamer({ userName: data.userName });
-  if (
-    requestedStreamer.docs[0] !== undefined &&
-    requestedStreamer.docs[0].isOnline === true
-  ) {
-    // add socketID to data object, so the streamer and the backend know where to send the subaddress
-    data.donatorSocketId = socket.id;
-    streamerNamespace
-      .to(requestedStreamer.docs[0].streamerSocketId)
-      .emit("createSubaddress", data);
+  const result = await db.getStreamer({ userName: data.userName });
+  if (result.isSuccess()) {
+    const streamer = result.unwrap();
+    if (streamer.isOnline) {
+      data.donatorSocketId = socket.id;
+      streamerNamespace
+        .to(streamer.streamerSocketId)
+        .emit("createSubaddress", data);
+    }
   }
 }
 
