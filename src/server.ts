@@ -36,6 +36,14 @@ type Failure<E> = {
 
 type ReturnMask<T, E> = Success<T> | Failure<E>;
 
+const isSuccess = (response: ReturnMask<T, E>): boolean => {
+  return response.type === "success";
+}
+
+const isError = (response: ReturnMask<T, E>): boolean => {
+  return response.type === "error";
+}
+
 db.populateTestStreamers();
 
 app.set("view engine", "pug");
@@ -207,7 +215,7 @@ function onSubaddressToBackend(data: {
 
 async function onStreamerDisconnectOrTimeout(socket: Socket) {
   const response = await db.getStreamer({ streamerSocketId: socket.id });
-  if (response.type === 'success') {
+  if (typeof response === ) {
     
   }
 
