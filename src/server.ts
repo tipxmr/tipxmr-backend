@@ -27,7 +27,7 @@ streamerNamespace.on("connection", (socket: Socket) => {
   socket.on("login", ({ _id, userName }, callback) => {
     onLogin(socket, _id, userName).then((response) => {
       //socket.emit("login", response);
-      callback(response);
+      callback(response.unwrap());
     });
   });
 
