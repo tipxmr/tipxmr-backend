@@ -20,7 +20,7 @@ export type Streamer = {
   creationDate: Date;
   displayName: string;
   donationStats: {
-    allDonations: any[];
+    allDonations: unknown[];
     largestDonation: number;
     totalDonations: number;
   };

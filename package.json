@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "watch": "npx nodemon src/server.ts",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "postinstall": "cp .env.example .env"
   },
   "keywords": [
     "tipxmr",
@@ -14,8 +15,9 @@
   "author": "Grischa Daum, Alex Anarcho, mghny",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "monero-javascript": "^0.5.1",
+    "monero-javascript": "^0.5.2",
     "pouchdb": "^7.2.2",
     "pouchdb-adapter-memory": "^7.2.2",
     "pouchdb-debug": "^7.2.1",

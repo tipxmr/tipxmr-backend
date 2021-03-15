@@ -126,7 +126,10 @@ animationNamespace.on("connection", (socket: Socket) => {
   });
 });
 
-async function onGetAnimationConfig(donatorSocketId: string, userName: string) {
+const onGetAnimationConfig = async (
+  donatorSocketId: string,
+  userName: string
+) => {
   const requestedStreamer = await db.getStreamer({
     userName,
   });
@@ -138,47 +141,45 @@ async function onGetAnimationConfig(donatorSocketId: string, userName: string) {
       .to(donatorSocketId)
       .emit("getAnimationConfig", animationSettings);
   }
-}
+};
 
 // ===============================================================
-// All Functions
+// All consts
 // ===============================================================
 
-async function onLogin(socket: Socket, _id: string, userName: string) {
+const onLogin = async (socket: Socket, _id: string, userName: string) => {
   return await db.loginStreamer(socket.id, _id, userName);
-}
+};
 
-function onSubaddressToBackend(data: {
+const onSubaddressToBackend = (data: {
   displayName: string;
   donatorSocketId: string;
   subaddress: string;
-}) {
-  console.log(
-    "New subaddress from " + data.displayName + ": " + data.subaddress
-  );
+}) => {
+  console.log(`New subaddress from ${data.displayName}: ${data.subaddress}`);
   donatorNamespace.to(data.donatorSocketId).emit("subaddressToDonator", data);
-}
+};
 
-async function onStreamerDisconnectOrTimeout(socket: Socket) {
+const onStreamerDisconnectOrTimeout = async (socket: Socket) => {
   const result = await db.getStreamer({ streamerSocketId: socket.id });
   if (result.isSuccess()) {
     const streamer = result.unwrap();
     db.updateOnlineStatusOfStreamer(streamer._id, false);
     console.log(`${streamer.displayName} disconnected"`);
   }
-}
+};
 
-function onPaymentRecieved(newDonation: any) {
+const onPaymentRecieved = (newDonation: any) => {
   console.log(
     `Recieved new donation from ${newDonation.donor} to ${newDonation.displayName}`
   );
   donatorNamespace
     .to(newDonation.donatorSocketId)
     .emit("paymentConfirmation", newDonation);
-}
+};
 
 // donator callbacks
-async function onGetStreamer(donatorSocketId: string, userName: string) {
+const onGetStreamer = async (donatorSocketId: string, userName: string) => {
   console.log(
     `Donator (${donatorSocketId}) requested streamer info from ${userName}`
   );
@@ -189,23 +190,23 @@ async function onGetStreamer(donatorSocketId: string, userName: string) {
   if (result.isSuccess()) {
     const requestedStreamer = result.unwrap();
     const returnStreamerToDonator = {
-      userName: requestedStreamer.userName,
-      displayName: requestedStreamer.displayName,
       _id: requestedStreamer._id,
-      isOnline: requestedStreamer.isOnline,
-      secondPrice: requestedStreamer.animationSettings.secondPrice,
-      charPrice: requestedStreamer.animationSettings.charPrice,
       charLimit: requestedStreamer.animationSettings.charLimit,
-      minAmount: requestedStreamer.animationSettings.minAmount,
+      charPrice: requestedStreamer.animationSettings.charPrice,
+      displayName: requestedStreamer.displayName,
       gifsMinAmount: requestedStreamer.animationSettings.gifsMinAmount,
-      goalProgress: requestedStreamer.animationSettings.goalProgress,
       goal: requestedStreamer.animationSettings.goal,
+      goalProgress: requestedStreamer.animationSettings.goalProgress,
       goalReached: requestedStreamer.animationSettings.goalReached,
-      streamUrl: requestedStreamer.stream.url,
-      streamPlatform: requestedStreamer.stream.platform,
-      streamLanguage: requestedStreamer.stream.language,
-      streamDescription: requestedStreamer.stream.description,
+      isOnline: requestedStreamer.isOnline,
+      minAmount: requestedStreamer.animationSettings.minAmount,
+      secondPrice: requestedStreamer.animationSettings.secondPrice,
       streamCategory: requestedStreamer.stream.category,
+      streamDescription: requestedStreamer.stream.description,
+      streamLanguage: requestedStreamer.stream.language,
+      streamPlatform: requestedStreamer.stream.platform,
+      streamUrl: requestedStreamer.stream.url,
+      userName: requestedStreamer.userName,
     };
     donatorNamespace
       .to(donatorSocketId)
@@ -213,11 +214,11 @@ async function onGetStreamer(donatorSocketId: string, userName: string) {
   } else {
     donatorNamespace.to(donatorSocketId).emit("recieveStreamer", 0);
   }
-}
+};
 
-async function onGetSubaddress(socket: Socket, data: any) {
+const onGetSubaddress = async (socket: Socket, data: any) => {
   console.log(
-    data.donor + " requested subaddress of streamer: " + data.displayName
+    `${data.donor} requested subaddress of streamer: ${data.displayName}`
   );
   const result = await db.getStreamer({ userName: data.userName });
   if (result.isSuccess()) {
@@ -229,15 +230,15 @@ async function onGetSubaddress(socket: Socket, data: any) {
         .emit("createSubaddress", data);
     }
   }
-}
+};
 
-function onDonatorDisconnectOrTimeout(socket: Socket) {
+const onDonatorDisconnectOrTimeout = (socket: Socket) => {
   console.log("donator (" + socket.id + ") disconnected");
-}
+};
 
-async function onGetOnlineStreamers(socket: Socket) {
+const onGetOnlineStreamers = async (socket: Socket) => {
   const onlineStreamers = await db.getAllOnlineStreamers();
   donatorNamespace.to(socket.id).emit("emitOnlineStreamers", onlineStreamers);
-}
+};
 
 httpServer.listen(3000);

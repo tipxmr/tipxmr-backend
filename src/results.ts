@@ -1,5 +1,3 @@
-import { throws } from "assert";
-
 export type Result<T, E> = Success<T, E> | Failure<T, E>;
 
 class Success<T, E> {

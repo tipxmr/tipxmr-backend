@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
@@ -8,13 +9,14 @@ import pouchdbAdapterMemory from "pouchdb-adapter-memory";
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
+dotenv.config();
 
 const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
 
 const daemon = connectToDaemonRpc(
-  "http://node.cryptocano.de:38081",
-  "superuser",
-  "abctesting123"
+  process.env.MONERO_DAEMON_URL,
+  process.env.MONERO_DAEMON_USER,
+  process.env.MONERO_DAEMON_PASSWORD
 );
 
 import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
@@ -25,42 +27,32 @@ import { success, failure, Result } from "./results";
 // ===============================================================
 // DB operations
 // ===============================================================
+const generateAnimationId = () => generateUUID().split("-").join("");
 
-export async function getStreamer(
+export const getStreamer = async (
   selector: Partial<Streamer>
-): Promise<Result<Streamer, Error>> {
-  if (selector._id) {
-    try {
-      const streamer = await db.get(selector._id);
-      console.log("Found streamer:", streamer.userName);
+): Promise<Result<Streamer, Error>> => {
+  try {
+    const streamerFind = await db.find({
+      selector,
+    });
+    if (streamerFind.docs.length) {
+      const streamer = streamerFind.docs[0];
       return success(streamer);
-    } catch (err) {
-      console.log(err);
-      return failure(err);
+    } else {
+      return failure(new Error("streamer not found"));
     }
-  } else {
-    try {
-      const streamerFind = await db.find({
-        selector,
-      });
-      if (streamerFind.docs.length) {
-        const streamer = streamerFind.docs[0];
-        return success(streamer);
-      } else {
-        return failure(new Error("streamer not found"));
-      }
-    } catch (err) {
-      console.log(err);
-      return failure(err);
-    }
+  } catch (err) {
+    console.log(err);
+    return failure(err);
   }
-}
+};
 
-export async function loginStreamer(
+export const loginStreamer = async (
   socketId: string,
   _id: string,
   userName: string | null
-): Promise<Result<Streamer, Error>> {
+): Promise<Result<Streamer, Error>> => {
   console.log(socketId, _id, userName);
   const result = await getStreamer({ _id });
   // When success, then streamer is already in DB
@@ -82,14 +74,14 @@ export async function loginStreamer(
       );
     }
   }
-}
+};
 
 // add a new streamer (register process), username needs to be unique
-export async function createStreamer(
+export const createStreamer = async (
   socketId: string,
   _id: string,
   userName: string
-): Promise<Result<Streamer, Error>> {
+): Promise<Result<Streamer, Error>> => {
   try {
     // step 1: check if username ist taken
     const result = await getStreamer({ userName });
@@ -99,13 +91,15 @@ export async function createStreamer(
       return failure(new Error(`userName ${streamer.userName} is taken`));
     } else {
       // step 2: if there is nobody with that username, create the object in the db
-      const newStreamer = defaultStreamerConfig;
-      newStreamer._id = _id;
-      newStreamer.streamerSocketId = socketId;
-      newStreamer.userName = userName;
-      newStreamer.restoreHeight = await daemon.getHeight();
-      newStreamer.creationDate = new Date();
-      db.putIfNotExists(newStreamer);
+      const newStreamer = {
+        ...defaultStreamerConfig,
+        _id,
+        userName,
+        streamerSocketId: socketId,
+        restoreHeight: await daemon.getHeight(),
+        creationDate: new Date(),
+      };
+      const result = await db.putIfNotExists(newStreamer);
       console.log(newStreamer.userName + " successfully created");
       return success(newStreamer);
     }
@@ -113,11 +107,11 @@ export async function createStreamer(
     console.log("Something went wrong with createStreamer", err);
     return failure(err);
   }
-}
+};
 
-export async function updateStreamer(
+export const updateStreamer = async (
   newStreamerConfig: Streamer
-): Promise<Result<boolean, Error>> {
+): Promise<Result<boolean, Error>> => {
   try {
     console.log("Updated streamer: " + newStreamerConfig.displayName);
     const result = await db.upsert(newStreamerConfig._id, () => {
@@ -127,18 +121,17 @@ export async function updateStreamer(
   } catch (err) {
     return failure(err);
   }
-}
+};
 
 // update online status of streamer
-export async function updateOnlineStatusOfStreamer(
+export const updateOnlineStatusOfStreamer = async (
   _id: string,
   newOnlineStatus: boolean
-): Promise<Result<boolean, Error>> {
+): Promise<Result<boolean, Error>> => {
   // can only update existing entries
   try {
-    const streamer = await db.get(_id);
-    streamer.isOnline = newOnlineStatus;
-    const result = await db.upsert(streamer._id, function () {
+    const streamer = { ...(await db.get(_id)), isOnline: newOnlineStatus };
+    const result = await db.upsert(streamer._id, () => {
       if (newOnlineStatus) {
         console.log(streamer.displayName + " went online");
       } else {
@@ -151,11 +144,9 @@ export async function updateOnlineStatusOfStreamer(
     console.log("Error in updateOnlineStatusOfStreamer", err);
     return failure(err);
   }
-}
+};
 
-const generateAnimationId = () => generateUUID().split("-").join("");
-
-export async function populateTestStreamers(): Promise<void> {
+export const populateTestStreamers = async (): Promise<void> => {
   const streamers = testStreamers
     .filter((testStreamer) => Object.keys(testStreamer).length)
     .map((testStreamer) => {
@@ -171,13 +162,13 @@ export async function populateTestStreamers(): Promise<void> {
   console.log("Populating test steamer data...");
   return db
     .bulkDocs(streamers)
-    .then(() => console.log("success"))
-    .catch(() => console.error("failed"));
-}
+    .then(() => console.log("Populating success"))
+    .catch(() => console.error("Populating failed"));
+};
 
-export async function getAllOnlineStreamers(): Promise<
+export const getAllOnlineStreamers = async (): Promise<
   Result<Streamer[], Error>
-> {
+> => {
   // index
   try {
     await db.createIndex({
@@ -216,4 +207,4 @@ export async function getAllOnlineStreamers(): Promise<
     console.log("Something went wrong with getAllOnlineStreamers", err);
     return failure(err);
   }
-}
+};
