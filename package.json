@@ -5,8 +5,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "watch": "npx nodemon src/server.ts",
-    "build": "tsc -p .",
-    "postinstall": "cp .env.example .env"
+    "build": "tsc -p ."
   },
   "keywords": [
     "tipxmr",
