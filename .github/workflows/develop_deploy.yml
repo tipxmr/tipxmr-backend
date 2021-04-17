@@ -24,7 +24,7 @@ jobs:
       env:
           CI: false
     - name: Deploy to dev.tipxmr.live
-      uses: easingthemes/ssh-deploy@v2.1.5
+      uses: easingthemes/ssh-deploy@v2.1.6
       with:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
         ARGS: "-rltgoDzvO --delete"
