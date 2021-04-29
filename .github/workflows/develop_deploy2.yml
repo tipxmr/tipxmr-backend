@@ -1,0 +1,21 @@
+name: Deploying
+
+on:
+  push:
+    branches:
+      - feature/138-continious_deployment
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TIPXMR_SERVER_HOST }}
+          username: ${{ secrets.TIPXMR_SERVER_USER }}
+          key: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
+          port: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
+          script: sh deploy_be_dev.sh
