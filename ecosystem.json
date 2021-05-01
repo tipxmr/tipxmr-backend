@@ -13,7 +13,10 @@
       "exec_mode": "cluster",
       "env_develop": {
         "NODE_ENV": "development",
-        "CORS_ORIGIN": "https://dev.tipxmr.live"
+        "CORS_ORIGIN": "https://dev.tipxmr.live",
+        "MONERO_DAEMON_URL": "http://node.cryptocano.de:38081",
+        "MONERO_DAEMON_USER": "superuser",
+        "MONERO_DAEMON_PASSWORD": ""
       },
       "env_production": {
         "NODE_ENV": "production",
