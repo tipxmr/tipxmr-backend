@@ -15,13 +15,13 @@ jobs:
 
     steps:
       - name: Create .env file
-        uses: SpicyPizza/create-envfile@v1
-        with:
-          envkey_NODE_ENV: "development"
-          envkey_CORS_ORIGIN: "https://dev.tipxmr.live"
-          envkey_MONERO_DAEMON_URL: ${{ secrets.MONERO_DAEMON_URL }}
-          envkey_MONERO_DAEMON_USER: ${{ secrets.MONERO_DAEMON_USER }}
-          envkey_MONERO_DAEMON_PASSWORD": ${{ secrets.MONERO_DAEMON_PASSWORD }}
+        run: |
+          touch .env 
+          echo CORS_ORIGIN=https://dev.tipxmr.live >> .env
+          echo NODE_ENV=development >> .env
+          echo MONERO_DAEMON_URL=${{ secrets.MONERO_DAEMON_URL }} >> .env
+          echo MONERO_DAEMON_USER=${{ secrets.MONERO_DAEMON_USER }} >> .env
+          echo MONERO_DAEMON_PASSWORD=${{ secrets.MONERO_DAEMON_PASSWORD }} >> .env
       - uses: actions/checkout@v2
       - name: Build using Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
