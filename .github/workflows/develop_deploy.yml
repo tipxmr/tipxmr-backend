@@ -2,9 +2,9 @@ name: Deploying
 
 on:
   push:
-    branches: [develop]
+    branches: [old]
   pull_request:
-    branches: [develop]
+    branches: [old]
 
 jobs:
   deploy:
@@ -12,6 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Create .env file
+        uses: SpicyPizza/create-envfile@v1
+        with:
+          envkey_CORS_ORIGIN: "https://dev.tipxmr.live"
+          envkey_MONERO_DAEMON_URL: ${{ secrets.MONERO_DAEMON_URL }}
+          envkey_MONERO_DAEMON_USER: ${{ secrets.MONERO_DAEMON_USER }}
+          envkey_MONERO_DAEMON_PASSWORD": ${{ secrets.MONERO_DAEMON_PASSWORD }}
       - name: executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@master
         with:

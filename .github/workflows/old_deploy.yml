@@ -2,20 +2,28 @@ name: Node.js CI
 
 on:
   push:
-    branches: [old]
+    branches: [develop]
   pull_request:
-    branches: [old]
+    branches: [develop]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [15.x]
+        node-version: [16.x]
 
     steps:
+      - name: Create .env file
+        uses: SpicyPizza/create-envfile@v1
+        with:
+          envkey_NODE_ENV: "development"
+          envkey_CORS_ORIGIN: "https://dev.tipxmr.live"
+          envkey_MONERO_DAEMON_URL: ${{ secrets.MONERO_DAEMON_URL }}
+          envkey_MONERO_DAEMON_USER: ${{ secrets.MONERO_DAEMON_USER }}
+          envkey_MONERO_DAEMON_PASSWORD": ${{ secrets.MONERO_DAEMON_PASSWORD }}
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Build using Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -33,4 +41,17 @@ jobs:
           REMOTE_HOST: ${{ secrets.TIPXMR_SERVER_HOST }}
           REMOTE_USER: ${{ secrets.TIPXMR_SERVER_USER }}
           REMOTE_PORT: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
-          TARGET: ${{ secrets.REMOTE_TARGET_PATH_DEVELOP }}
+          TARGET: ${{ secrets.SERVER_DEVDEPLOY_PATH }}
+      - name: starting project with pm2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TIPXMR_SERVER_HOST }}
+          username: ${{ secrets.TIPXMR_SERVER_USER }}
+          key: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
+          port: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
+          script: |
+            cd ~/dev.tipxmr.live/tipxmr-backend
+            pm2 stop ecosystem.json
+            rm -rf node_modules package-lock.json
+            npm install
+            pm2 start ecosystem.json
