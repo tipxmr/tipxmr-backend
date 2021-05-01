@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
           port: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
           script: |
-            cd ${{ secrets.SERVER_DEVDEPLOY_PATH }}
+            cd ~/dev.tipxmr.live/tipxmr-backend
             pm2 kill
             rm -rf node_modules package-lock.json
             git pull
