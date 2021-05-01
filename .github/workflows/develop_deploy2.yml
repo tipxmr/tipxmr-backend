@@ -18,4 +18,13 @@ jobs:
           username: ${{ secrets.TIPXMR_SERVER_USER }}
           key: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
           port: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
-          script: sh deploy_be_dev.sh
+          script: |
+            mkdir -p ~/dev.tipxmr.live
+            cd ~/dev.tipxmr.live/tipxmr-backend
+            pm2 kill
+            rm -rf node_modules package-lock.json
+            git pull
+            git checkout feature/138-continious_deployment
+            npm install 
+            npm run build
+            pm2 start dist/server.js
