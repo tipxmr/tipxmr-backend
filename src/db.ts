@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
@@ -9,7 +8,6 @@ import pouchdbAdapterMemory from "pouchdb-adapter-memory";
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
-dotenv.config();
 
 const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
 

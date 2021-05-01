@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Backend for TipXMR",
   "scripts": {
-    "start": "node dist/server.js",
-    "start-local": "CORS_ORIGIN=http://localhost:3000 npx nodemon src/server.ts",
-    "watch": "npx nodemon src/server.ts",
+    "start": "node -r dotenv/config dist/server.js",
+    "start-local": "npx nodemon -r dotenv/config src/server.ts",
+    "watch": "npx nodemon -r dotenv/config src/server.ts",
     "build": "tsc -p ."
   },
   "keywords": [
@@ -17,7 +17,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "monero-javascript": "^0.5.2",
+    "monero-javascript": "^0.5.3",
     "pouchdb": "^7.2.2",
     "pouchdb-adapter-memory": "^7.2.2",
     "pouchdb-debug": "^7.2.1",
