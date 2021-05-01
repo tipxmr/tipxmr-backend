@@ -4,14 +4,14 @@
       "name": "TipXMR Backend Dev",
       "script": "npm",
       "args": "run start",
-      "watch": true,
+      "watch": false,
       "cwd": "/home/tipxmr/dev.tipxmr.live/tipxmr-backend",
       "out_file": "/home/tipxmr/dev.tipxmr.live/backend.out.log",
       "err_file": "/home/tipxmr/dev.tipxmr.live/backend.err.log",
       "merge_logs": true,
       "instances": 1,
       "exec_mode": "cluster",
-      "env_dev": {
+      "env_develop": {
         "NODE_ENV": "development",
         "CORS_ORIGIN": "https://dev.tipxmr.live"
       },

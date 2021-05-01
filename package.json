@@ -4,6 +4,7 @@
   "description": "Backend for TipXMR",
   "scripts": {
     "start": "node dist/server.js",
+    "start-local": "CORS_ORIGIN=http://localhost:3000 npx nodemon src/server.ts",
     "watch": "npx nodemon src/server.ts",
     "build": "tsc -p ."
   },
