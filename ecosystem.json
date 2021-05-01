@@ -1,16 +1,24 @@
 {
-    "apps" : [
-       {
-          "name"          : "TipXMR Backend Dev",
-          "script"        : "npm",
-          "args"          : "run start",
-          "watch"         : true,
-          "cwd"           : "/home/tipxmr/dev.tipxmr.live/tipxmr-backend",
-          "out_file"      : "/home/tipxmr/dev.tipxmr.live/backend.out.log",
-          "err_file"      : "/home/tipxmr/dev.tipxmr.live/backend.err.log",
-          "merge_logs"    : true,
-          "instances"     : 1,
-          "exec_mode"     : "cluster"
-       }
-    ]
-  }
+  "apps": [
+    {
+      "name": "TipXMR Backend Dev",
+      "script": "npm",
+      "args": "run start",
+      "watch": true,
+      "cwd": "/home/tipxmr/dev.tipxmr.live/tipxmr-backend",
+      "out_file": "/home/tipxmr/dev.tipxmr.live/backend.out.log",
+      "err_file": "/home/tipxmr/dev.tipxmr.live/backend.err.log",
+      "merge_logs": true,
+      "instances": 1,
+      "exec_mode": "cluster",
+      "env_dev": {
+        "NODE_ENV": "development",
+        "CORS_ORIGIN": "https://dev.tipxmr.live"
+      },
+      "env_production": {
+        "NODE_ENV": "production",
+        "CORS_ORIGIN": "https://tipxmr.live"
+      }
+    }
+  ]
+}
