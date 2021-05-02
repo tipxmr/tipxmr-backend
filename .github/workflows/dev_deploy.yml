@@ -1,0 +1,57 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build using Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Create .env file
+        run: |
+          touch .env 
+          echo CORS_ORIGIN=https://dev.tipxmr.live >> .env
+          echo NODE_ENV=development >> .env
+          echo MONERO_DAEMON_URL=${{ secrets.MONERO_DAEMON_URL }} >> .env
+          echo MONERO_DAEMON_USER=${{ secrets.MONERO_DAEMON_USER }} >> .env
+          echo MONERO_DAEMON_PASSWORD=${{ secrets.MONERO_DAEMON_PASSWORD }} >> .env
+      - run: npm ci
+      - run: npm run build --if-present
+        env:
+          CI: false
+      - name: Deploy to dev.tipxmr.live
+        uses: easingthemes/ssh-deploy@v2.1.6
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
+          ARGS: "-rltgoDzvO --delete"
+          SOURCE: "./"
+          EXCLUDE: "/node_modules/"
+          REMOTE_HOST: ${{ secrets.TIPXMR_SERVER_HOST }}
+          REMOTE_USER: ${{ secrets.TIPXMR_SERVER_USER }}
+          REMOTE_PORT: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
+          TARGET: ${{ secrets.SERVER_DEVDEPLOY_PATH }}
+      - name: starting project with pm2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TIPXMR_SERVER_HOST }}
+          username: ${{ secrets.TIPXMR_SERVER_USER }}
+          key: ${{ secrets.SSH_KEY_TIPXMR_SERVER }}
+          port: ${{ secrets.TIPXMR_SERVER_SSH_PORT }}
+          script: |
+            cd ~/dev.tipxmr.live/tipxmr-backend
+            pm2 stop ecosystem.json
+            rm -rf node_modules package-lock.json
+            npm install
+            pm2 start ecosystem.json
