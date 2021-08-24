@@ -11,6 +11,21 @@ PouchDB.plugin(pouchdbAdapterMemory);
 
 const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
 
+import * as pg from "pg";
+const { Client } = pg;
+const client = new Client({
+  user: "tipxmr",
+  host: "postgres",
+  database: "tipxmr",
+  password: "tipxmr",
+  port: 5432,
+});
+client.connect();
+client.query("SELECT NOW()", (err, res) => {
+  console.log(err, res);
+  client.end();
+});
+
 const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
   process.env.MONERO_DAEMON_USER,

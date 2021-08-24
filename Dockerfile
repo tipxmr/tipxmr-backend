@@ -1,7 +1,8 @@
 FROM node:current-alpine
-RUN apk add g++ make python
 
-WORKDIR /usr/local/app
+WORKDIR /usr/app
+# Bundle app source
+COPY . .
 
 RUN npm install && npm cache clean --force
 USER node
