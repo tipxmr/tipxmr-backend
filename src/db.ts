@@ -5,13 +5,18 @@ import PouchDB from "pouchdb";
 import pouchdbUpsert from "pouchdb-upsert";
 import pouchdbFind from "pouchdb-find";
 import pouchdbAdapterMemory from "pouchdb-adapter-memory";
+import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
+import { testStreamers } from "./data/streamerTestDB";
+import { Streamer } from "./data/Streamer";
+import { success, failure, Result } from "./results";
+import * as pg from "pg";
+
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
 
 const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
 
-import * as pg from "pg";
 const { Client } = pg;
 const client = new Client({
   user: "tipxmr",
@@ -31,11 +36,6 @@ const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_USER,
   process.env.MONERO_DAEMON_PASSWORD
 );
-
-import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
-import { testStreamers } from "./data/streamerTestDB";
-import { Streamer } from "./data/Streamer";
-import { success, failure, Result } from "./results";
 
 // ===============================================================
 // DB operations
