@@ -5,22 +5,37 @@ import PouchDB from "pouchdb";
 import pouchdbUpsert from "pouchdb-upsert";
 import pouchdbFind from "pouchdb-find";
 import pouchdbAdapterMemory from "pouchdb-adapter-memory";
+import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
+import { testStreamers } from "./data/streamerTestDB";
+import { Streamer } from "./data/Streamer";
+import { success, failure, Result } from "./results";
+import * as pg from "pg";
+
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
 
 const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
 
+const { Client } = pg;
+const client = new Client({
+  user: "tipxmr",
+  host: "postgres",
+  database: "tipxmr",
+  password: "tipxmr",
+  port: 5432,
+});
+client.connect();
+client.query("SELECT NOW()", (err, res) => {
+  console.log(err, res);
+  client.end();
+});
+
 const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
   process.env.MONERO_DAEMON_USER,
   process.env.MONERO_DAEMON_PASSWORD
 );
-
-import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
-import { testStreamers } from "./data/streamerTestDB";
-import { Streamer } from "./data/Streamer";
-import { success, failure, Result } from "./results";
 
 // ===============================================================
 // DB operations
@@ -42,7 +57,10 @@ export const getStreamer = async (
     }
   } catch (err) {
     console.log(err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -103,7 +121,10 @@ export const createStreamer = async (
     }
   } catch (err) {
     console.log("Something went wrong with createStreamer", err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -117,7 +138,10 @@ export const updateStreamer = async (
     });
     return success(result.updated);
   } catch (err) {
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -140,7 +164,10 @@ export const updateOnlineStatusOfStreamer = async (
     return success(result.updated);
   } catch (err) {
     console.log("Error in updateOnlineStatusOfStreamer", err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -203,6 +230,9 @@ export const getAllOnlineStreamers = async (): Promise<
     return success(onlineStreamers.docs);
   } catch (err) {
     console.log("Something went wrong with getAllOnlineStreamers", err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };

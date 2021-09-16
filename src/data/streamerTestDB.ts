@@ -1,7 +1,7 @@
 import { Streamer } from "./Streamer";
 
 const alex: Streamer = {
-  _id: "fa80ac5814a6fddee2fa29a1e62f5de4e3a233f07a51e886a3a1e7a8bce5abf7",
+  _id: "f4d63073a23a9bdf441dc2d2a0d00643a766a37d9ce549739a95536876bdffa2",
   animationSettings: {
     bgImg: "",
     charLimit: 99,
