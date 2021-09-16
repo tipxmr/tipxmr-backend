@@ -57,7 +57,10 @@ export const getStreamer = async (
     }
   } catch (err) {
     console.log(err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -118,7 +121,10 @@ export const createStreamer = async (
     }
   } catch (err) {
     console.log("Something went wrong with createStreamer", err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -132,7 +138,10 @@ export const updateStreamer = async (
     });
     return success(result.updated);
   } catch (err) {
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -155,7 +164,10 @@ export const updateOnlineStatusOfStreamer = async (
     return success(result.updated);
   } catch (err) {
     console.log("Error in updateOnlineStatusOfStreamer", err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
 
@@ -218,6 +230,9 @@ export const getAllOnlineStreamers = async (): Promise<
     return success(onlineStreamers.docs);
   } catch (err) {
     console.log("Something went wrong with getAllOnlineStreamers", err);
-    return failure(err);
+    if (err instanceof Error) {
+      return failure(err);
+    }
+    return failure(new Error());
   }
 };
