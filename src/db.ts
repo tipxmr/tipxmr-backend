@@ -9,27 +9,12 @@ import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
 import { success, failure, Result } from "./results";
-import * as pg from "pg";
 
 PouchDB.plugin(pouchdbUpsert);
 PouchDB.plugin(pouchdbFind);
 PouchDB.plugin(pouchdbAdapterMemory);
 
 const db = new PouchDB<Streamer>("streamers", { adapter: "memory" });
-
-const { Client } = pg;
-const client = new Client({
-  user: "tipxmr",
-  host: "postgres",
-  database: "tipxmr",
-  password: "tipxmr",
-  port: 5432,
-});
-client.connect();
-client.query("SELECT NOW()", (err, res) => {
-  console.log(err, res);
-  client.end();
-});
 
 const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
