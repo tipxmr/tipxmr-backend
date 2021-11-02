@@ -7,6 +7,7 @@ import { Streamer } from "./data/Streamer";
 import { success, failure, Result } from "./results";
 import * as pg from "pg";
 import fs from "fs";
+import { drop_db, types, tables } from "./sql/init"; 
 
 const { Client } = pg;
 const client = new Client({
@@ -18,18 +19,16 @@ const client = new Client({
 });
 client.connect();
 
-const initDatabaseQueries = fs
-  .readFileSync("./sql/init.sql")
-  .toString()
-  .replace(/(\r\n|\n|\r)/gm, " ") // remove newlines
-  .replace(/\s+/g, " ") // excess white space
-  .split(";") // split into all statements
-  .map(Function.prototype.call, String.prototype.trim)
-  .filter((el) => el.length !== 0); // remove any empty ones;
+// DB Init
 
-initDatabaseQueries.forEach((query: pg.Query) => {
-  client.query(query);
-});
+types.forEach(type => {
+  client.query(type);
+})
+
+tables.forEach(table => {
+  client.query(table);
+})
+
 client.end;
 
 /* const daemon = connectToDaemonRpc(
