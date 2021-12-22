@@ -17,7 +17,11 @@ const client = new Client({
   password: "tipxmr",
   port: 5432,
 });
-client.connect();
+
+client
+  .connect()
+  .then(() => console.log('connected'))
+  .catch(err => console.error('connection error', err))
 
 // DB Init
 
@@ -27,9 +31,9 @@ types.forEach(type => {
 
 tables.forEach(table => {
   client.query(table);
-})
+}) 
 
-client.end;
+client.end();
 
 /* const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
