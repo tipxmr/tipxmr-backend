@@ -5,35 +5,36 @@ import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
 import { success, failure, Result } from "./results";
-import * as pg from "pg";
+import pg from "pg";
 import fs from "fs";
-import { drop_db, types, tables } from "./sql/init"; 
+import { types, tables } from "./sql/init.js";
 
 const { Client } = pg;
 const client = new Client({
   user: "tipxmr",
-  host: "postgres",
+  host: "172.23.0.2",
   database: "tipxmr",
   password: "tipxmr",
   port: 5432,
 });
 
-client
-  .connect()
-  .then(() => console.log('connected'))
-  .catch(err => console.error('connection error', err))
+try {
+  await client.connect();
+} catch (error) {
+  console.error(error);
+}
 
 // DB Init
 
-types.forEach(type => {
+types.forEach((type) => {
   client.query(type);
-})
+});
 
-tables.forEach(table => {
+tables.forEach((table) => {
   client.query(table);
-}) 
+});
 
-client.end();
+// client.end();
 
 /* const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
