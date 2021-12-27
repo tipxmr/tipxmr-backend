@@ -1,7 +1,7 @@
 import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
-import { testStreamers } from "./data/streamerTestDB";
+//import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
 import pg from "pg";
 import { types, tables } from "./sql/init";
@@ -9,7 +9,7 @@ import { types, tables } from "./sql/init";
 const { Client } = pg;
 const client = new Client({
   user: "tipxmr",
-  host: "172.23.0.2",
+  host: process.env.DB_HOST,
   database: "tipxmr",
   password: "tipxmr",
   port: 5432,
@@ -17,6 +17,7 @@ const client = new Client({
 
 try {
   await client.connect();
+  console.log(`Connected to DB`);
 } catch (error) {
   console.error(error);
 }
@@ -31,7 +32,7 @@ tables.forEach((table) => {
   client.query(table);
 });
 
-const daemon = connectToDaemonRpc(
+/* const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
   process.env.MONERO_DAEMON_USER,
   process.env.MONERO_DAEMON_PASSWORD
@@ -68,6 +69,6 @@ export const populateTestStreamers = async (): Promise<void> => {
       .catch((err) => console.error(err));
   });
   return;
-};
+}; */
 
-await populateTestStreamers();
+//await populateTestStreamers();
