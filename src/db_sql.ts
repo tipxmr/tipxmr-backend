@@ -1,13 +1,10 @@
 import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
-import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
 import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
-import { success, failure, Result } from "./results";
 import pg from "pg";
-import fs from "fs";
-import { types, tables } from "./sql/init.js";
+import { types, tables } from "./sql/init";
 
 const { Client } = pg;
 const client = new Client({
@@ -34,9 +31,7 @@ tables.forEach((table) => {
   client.query(table);
 });
 
-// client.end();
-
-/* const daemon = connectToDaemonRpc(
+const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
   process.env.MONERO_DAEMON_USER,
   process.env.MONERO_DAEMON_PASSWORD
@@ -48,7 +43,8 @@ tables.forEach((table) => {
 const generateAnimationId = () => generateUUID().split("-").join("");
 
 export const getStreamer = async (selector: Partial<Streamer>) => {
-  const result = await client.query("SELECT * FROM streamer WHERE ${selector}"); // todo
+  const result = await client.query(`SELECT * FROM streamer WHERE ${selector}`);
+  return result;
 };
 
 export const populateTestStreamers = async (): Promise<void> => {
@@ -64,10 +60,14 @@ export const populateTestStreamers = async (): Promise<void> => {
       };
     });
   streamers.map((streamer) => {
-    client.query("INSERT INTO streamer(_id) ");
+    client
+      .query(
+        `INSERT INTO streamer (id, name, alias, socket) VALUES (${streamer._id}, ${streamer.userName}, ${streamer.displayName}, ${streamer.streamerSocketId})`
+      )
+      .then(() => console.log("susccess"))
+      .catch((err) => console.error(err));
   });
-
-  console.log("Populating test steamer data...");
   return;
 };
- */
+
+await populateTestStreamers();
