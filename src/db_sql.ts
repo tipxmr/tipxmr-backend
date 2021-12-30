@@ -15,22 +15,48 @@ const client = new Client({
   port: 5432,
 });
 
-try {
-  await client.connect();
-  console.log(`Connected to DB`);
-} catch (error) {
-  console.error(error);
-}
+const connectToDb = async () => {
+  const startedAt = new Date().getTime();
+  try {
+    await client.connect();
+    console.log(`Connected to DB`);
+  } catch (error) {
+    console.error(error);
+    console.log("startedAt", startedAt);
+    console.log("crashedAt", new Date().getTime());
+    setTimeout(() => {
+      connectToDb();
+    }, 1000);
+  }
+};
+
+await connectToDb();
+
+
+const printCreatedType = (sql: String) => {
+  const type = sql.split('CREATE TYPE ')[1].split(' ')[0];
+  console.log(`Creating type [${type}]`);
+};
+
+const printCreatedTable = (sql: String) => {
+  const table = sql.split('CREATE TABLE ')[1].split(' ')[0];
+  console.log(`Creating table [${table}]`);
+};
+
 
 // DB Init
 
 types.forEach((type) => {
+  printCreatedType(type);
   client.query(type);
 });
 
 tables.forEach((table) => {
+  printCreatedTable(table);
   client.query(table);
 });
+
+
 
 /* const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
