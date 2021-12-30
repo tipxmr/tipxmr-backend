@@ -74,19 +74,7 @@ export const getStreamer = async (selector: Partial<Streamer>) => {
   return result;
 };
 
-export const populateTestStreamers = async (): Promise<void> => {
-  const streamers = testStreamers
-    .filter((testStreamer) => Object.keys(testStreamer).length)
-    .map((testStreamer) => {
-      const animationId = generateAnimationId();
-      console.log(animationId);
-      return {
-        ...testStreamer,
-        animationId,
-        _id: testStreamer._id,
-      };
-    });
-  streamers.map((streamer) => {
+const insertStreamer = async (streamer: Streamer) => {
     const query = {
       text: "INSERT INTO streamer(id, name, alias, socket) VALUES($1, $2, $3, $4)",
       values: [
@@ -98,10 +86,15 @@ export const populateTestStreamers = async (): Promise<void> => {
     };
     client
       .query(query)
-      .then(() => console.log("susccess"))
+      .then((res) => console.log("Inserted streamer", streamer.userName))
       .catch((err) => console.error(err));
-  });
-  return;
 };
 
-await populateTestStreamers();
+
+const populateTables = async () => {
+  testStreamers.map(async (streamer) => {
+    await insertStreamer(streamer);
+  })
+} 
+
+await populateTables();
