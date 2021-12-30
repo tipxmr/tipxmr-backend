@@ -1,7 +1,7 @@
 import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
-//import { testStreamers } from "./data/streamerTestDB";
+import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
 import pg from "pg";
 import { types, tables } from "./sql/init";
@@ -32,33 +32,33 @@ const connectToDb = async () => {
 
 await connectToDb();
 
-
 const printCreatedType = (sql: String) => {
-  const type = sql.split('CREATE TYPE ')[1].split(' ')[0];
+  const type = sql.split("CREATE TYPE ")[1].split(" ")[0];
   console.log(`Creating type [${type}]`);
 };
 
 const printCreatedTable = (sql: String) => {
-  const table = sql.split('CREATE TABLE ')[1].split(' ')[0];
+  const table = sql.split("CREATE TABLE ")[1].split(" ")[0];
   console.log(`Creating table [${table}]`);
 };
-
 
 // DB Init
 
 types.forEach((type) => {
-  printCreatedType(type);
-  client.query(type);
+  client
+    .query(type)
+    .then((res) => printCreatedType(type))
+    .catch((e) => console.error(e.stack));
 });
 
 tables.forEach((table) => {
-  printCreatedTable(table);
-  client.query(table);
+  client
+    .query(table)
+    .then((res) => printCreatedTable(table))
+    .catch((e) => console.error(e.stack));
 });
 
-
-
-/* const daemon = connectToDaemonRpc(
+const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
   process.env.MONERO_DAEMON_USER,
   process.env.MONERO_DAEMON_PASSWORD
@@ -87,14 +87,21 @@ export const populateTestStreamers = async (): Promise<void> => {
       };
     });
   streamers.map((streamer) => {
+    const query = {
+      text: "INSERT INTO streamer(id, name, alias, socket) VALUES($1, $2, $3, $4)",
+      values: [
+        streamer._id.slice(0, 11),
+        streamer.userName,
+        streamer.displayName,
+        streamer.streamerSocketId || null,
+      ],
+    };
     client
-      .query(
-        `INSERT INTO streamer (id, name, alias, socket) VALUES (${streamer._id}, ${streamer.userName}, ${streamer.displayName}, ${streamer.streamerSocketId})`
-      )
+      .query(query)
       .then(() => console.log("susccess"))
       .catch((err) => console.error(err));
   });
   return;
-}; */
+};
 
-//await populateTestStreamers();
+await populateTestStreamers();
