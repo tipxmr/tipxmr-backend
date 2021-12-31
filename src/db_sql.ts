@@ -4,7 +4,7 @@ import { connectToDaemonRpc } from "monero-javascript";
 import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
 import pg from "pg";
-import { types, tables } from "./sql/init";
+import { drop_db, types, tables } from "./sql/init";
 
 const { Client } = pg;
 const client = new Client({
@@ -44,7 +44,7 @@ const printCreatedTable = (sql: String) => {
 
 // DB Init
 
-types.forEach((type) => {
+/* types.forEach((type) => {
   client
     .query(type)
     .then((res) => printCreatedType(type))
@@ -56,7 +56,9 @@ tables.forEach((table) => {
     .query(table)
     .then((res) => printCreatedTable(table))
     .catch((e) => console.error(e.stack));
-});
+}); */
+
+//client.query(drop_db);
 
 const daemon = connectToDaemonRpc(
   process.env.MONERO_DAEMON_URL,
@@ -97,4 +99,4 @@ const populateTables = async () => {
   })
 } 
 
-await populateTables();
+//await populateTables();

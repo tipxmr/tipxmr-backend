@@ -17,6 +17,7 @@
   "author": "Grischa Daum, Alex Anarcho, mghny",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@prisma/client": "^3.7.0",
     "@swc/core": "^1.2.124",
     "@swc/wasm": "^1.2.124",
     "cors": "^2.8.5",
