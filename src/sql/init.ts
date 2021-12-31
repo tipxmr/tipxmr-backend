@@ -52,7 +52,7 @@ CREATE TABLE animation (
 const wallet_table = `
 DROP TABLE IF EXISTS wallet CASCADE;
 CREATE TABLE wallet (
-    streamer varchar(12) REFERENCES streamer(id),
+    streamer varchar(12) REFERENCES streamer(id) PRIMARY KEY,
     restore_height integer,
     last_sync_height integer
 );
@@ -70,7 +70,7 @@ CREATE TABLE category (
 const stream_table = `
 DROP TABLE IF EXISTS stream CASCADE;
 CREATE TABLE stream (
-    streamer varchar(12) REFERENCES streamer(id),
+    streamer varchar(12) REFERENCES streamer(id) PRIMARY KEY,
     url varchar(100),
     platform platforms,
     language languages,
@@ -81,7 +81,7 @@ CREATE TABLE stream (
 const account_table = `
 DROP TABLE IF EXISTS account CASCADE;
 CREATE TABLE account (
-    streamer varchar(12) REFERENCES streamer(id),
+    streamer varchar(12) REFERENCES streamer(id) PRIMARY KEY,
     creation_date timestamp,
     status statuses
 );
@@ -119,7 +119,7 @@ CREATE TABLE donation (
 const dontaion_settings_table = `
 DROP TABLE IF EXISTS donation_settings CASCADE;
 CREATE TABLE donation_settings (
-    streamer varchar(12) REFERENCES streamer(id),
+    streamer varchar(12) REFERENCES streamer(id) PRIMARY KEY,
     second_price integer,
     char_price double precision,
     char_limit integer,

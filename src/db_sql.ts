@@ -25,7 +25,7 @@ const connectToDb = async () => {
     console.log("startedAt", startedAt);
     console.log("crashedAt", new Date().getTime());
     setTimeout(() => {
-      connectToDb();
+     // connectToDb();
     }, 1000);
   }
 };

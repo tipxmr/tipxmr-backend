@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  streamer                   String    @id @db.VarChar(12)
+  creation_date              DateTime? @db.Timestamp(6)
+  status                     statuses?
+  streamer_accountTostreamer streamer  @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model animation {
+  id                           Int       @id
+  streamer                     String?   @db.VarChar(12)
+  size                         Int?
+  color                        String?   @db.VarChar(10)
+  streamer_animationTostreamer streamer? @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model category {
+  id                          Int         @id
+  streamer                    String?     @db.VarChar(12)
+  name                        categories?
+  streamer_categoryTostreamer streamer?   @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  stream                      stream[]
+}
+
+model donation {
+  id                          Int       @id
+  streamer                    String?   @db.VarChar(12)
+  amount                      Float
+  message                     String?   @db.VarChar(256)
+  display_time_seconds        Int?
+  subaddress                  String?   @db.VarChar(95)
+  confirmations               Int?
+  giphy_url                   String?   @db.VarChar(100)
+  donor                       String?   @db.VarChar(24)
+  timestamp                   DateTime? @db.Timestamp(6)
+  streamer_donationTostreamer streamer? @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model donation_settings {
+  streamer                             String   @id @db.VarChar(12)
+  second_price                         Int?
+  char_price                           Float?
+  char_limit                           Int?
+  min_amount                           Int?
+  gifs_min_amount                      Float?
+  goal                                 Float?
+  goal_progress                        Float?   @db.Real
+  goal_reached                         Boolean?
+  streamer_donation_settingsTostreamer streamer @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model invoice {
+  id                         Int            @id
+  streamer                   String?        @db.VarChar(12)
+  start_date                 DateTime?      @db.Timestamp(6)
+  end_date                   DateTime?      @db.Timestamp(6)
+  plan_type                  plan_types?
+  paid_status                paid_statuses?
+  subaddress                 String?        @db.VarChar(95)
+  streamer_invoiceTostreamer streamer?      @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model stream {
+  streamer                  String     @id @db.VarChar(12)
+  url                       String?    @db.VarChar(100)
+  platform                  platforms?
+  language                  languages?
+  category                  Int?
+  category_categoryTostream category?  @relation(fields: [category], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  streamer_streamTostreamer streamer   @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model streamer {
+  id                String             @id @db.VarChar(12)
+  name              String             @unique @db.VarChar(20)
+  alias             String             @unique @db.VarChar(24)
+  socket            String?            @unique @db.VarChar(20)
+  account           account?
+  animation         animation[]
+  category          category[]
+  donation          donation[]
+  donation_settings donation_settings?
+  invoice           invoice[]
+  stream            stream?
+  wallet            wallet?
+}
+
+model wallet {
+  streamer                  String   @id @db.VarChar(12)
+  restore_height            Int?
+  last_sync_height          Int?
+  streamer_streamerTowallet streamer @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum categories {
+  Gaming
+  Learning
+  Talk
+  Erotics
+}
+
+enum languages {
+  English
+  German
+  French
+  Italian
+}
+
+enum paid_statuses {
+  paid
+  unpaid
+  canceled
+}
+
+enum plan_types {
+  basic
+  premium
+}
+
+enum platforms {
+  YouTube
+  Twitch
+  Chaturbate
+  Selfhosted
+}
+
+enum statuses {
+  active
+  closed
+}
