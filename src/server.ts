@@ -2,10 +2,11 @@ import express from "express";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
-import * as db from "./db";
+import * as db from "./db_sql";
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -18,12 +19,29 @@ const streamerNamespace = io.of("/streamer");
 const donatorNamespace = io.of("/donator");
 const animationNamespace = io.of("/animation");
 
-db.populateTestStreamers();
+const trunkateHashedSeed = (hashedSeed: string) => hashedSeed.slice(0, 11);
 
 // ===============================================================
 // Streamer Namespace
 // ===============================================================
 
+app.post('/login', async (req, res, next) => {
+  const { hashedSeed } = req.body;
+  let streamer;
+  try {
+    streamer = await db.getStreamerById(trunkateHashedSeed(hashedSeed));
+  } catch (error) {
+    return next(error);
+  }
+  if (!streamer) {
+    return next(new Error("Streamer not found"));
+  }
+  res.json(streamer);
+});
+
+
+
+/* 
 streamerNamespace.on("connection", (socket: Socket) => {
   // streamer requests config at login by giving his _id
   socket.on("login", ({ _id, userName }, callback) => {
@@ -241,6 +259,6 @@ const onDonatorDisconnectOrTimeout = (socket: Socket) => {
 const onGetOnlineStreamers = async (socket: Socket) => {
   const onlineStreamers = await db.getAllOnlineStreamers();
   donatorNamespace.to(socket.id).emit("emitOnlineStreamers", onlineStreamers);
-};
+}; */
 
 httpServer.listen(3000);

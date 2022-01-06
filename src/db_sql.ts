@@ -28,7 +28,7 @@ const findManyStreamers = async (
   });
 };
 
-const getStreamerById = async (id: Streamer["_id"]) => {
+export const getStreamerById = async (id: Streamer["_id"]) => {
   return prisma.streamer.findUnique({
     where: { id: id },
   });
