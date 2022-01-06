@@ -36,7 +36,7 @@ app.post('/login', async (req, res, next) => {
   if (!streamer) {
     return next(new Error("Streamer not found"));
   }
-  res.json(streamer);
+  res.json({streamer});
 });
 
 

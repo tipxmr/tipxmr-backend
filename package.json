@@ -9,6 +9,9 @@
     "build": "tsc -p .",
     "postinstall": "npx prisma generate"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "type": "module",
   "keywords": [
     "tipxmr",

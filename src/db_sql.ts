@@ -1,8 +1,8 @@
 import { v4 as generateUUID } from "uuid";
 // @ts-ignore
 import { connectToDaemonRpc } from "monero-javascript";
-import { testStreamers } from "./data/streamerTestDB";
-import { Streamer } from "./data/Streamer";
+import { testStreamers } from "./data/intialTables";
+import { Streamer } from "./data/types";
 import pkg, { Prisma } from "@prisma/client";
 const { PrismaClient } = pkg;
 
@@ -44,12 +44,3 @@ const insertStreamer = async (streamer: Streamer) => {
     },
   });
 };
-
-const populateTables = async () => {
-  const promises = testStreamers.map(insertStreamer)
-  return Promise.all(promises);
-};
-
-if ((await prisma.streamer.count()) === 0) {
-  await populateTables();
-}

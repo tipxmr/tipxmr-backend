@@ -1,4 +1,18 @@
 export type Streamer = {
+  id: string;
+  name: string;
+  alias: string;
+  socket: string | null;
+};
+
+export type Account = {
+  streamer: string;
+  createdAt: Date;
+  isOnline: boolean;
+  status: "active" | "inactive";
+}
+
+/* export type Streamer = {
   _id: string;
   animationSettings: {
     bgImg: string;
@@ -37,4 +51,4 @@ export type Streamer = {
   };
   streamerSocketId: string;
   userName: string;
-};
+}; */

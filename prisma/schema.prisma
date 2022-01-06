@@ -9,7 +9,8 @@ datasource db {
 
 model Account {
   streamer                   String    @id @db.VarChar(12)
-  creation_date              DateTime? @db.Timestamp(6)
+  createdAt                  DateTime  @default(now()) @db.Timestamp(6)
+  isOnline                   Boolean   @db.Boolean @default(false)
   status                     Statuses?
   streamer_accountTostreamer Streamer  @relation(fields: [streamer], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
