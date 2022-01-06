@@ -3,8 +3,8 @@ import { v4 as generateUUID } from "uuid";
 import { connectToDaemonRpc } from "monero-javascript";
 import { testStreamers } from "./data/streamerTestDB";
 import { Streamer } from "./data/Streamer";
-import pkg from "@prisma/client";
-const { PrismaClient, Prisma } = pkg;
+import pkg, { Prisma } from "@prisma/client";
+const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient();
 
@@ -19,17 +19,16 @@ const daemon = connectToDaemonRpc(
 // ===============================================================
 const generateAnimationId = () => generateUUID().split("-").join("");
 
-/* const findManyStreamers = async (
-  selector: Prisma.StreamerSelect,
+const findManyStreamers = async (
+  selector: Prisma.StreamerScalarFieldEnum,
   searchTerm: any
 ) => {
-  return await prisma.streamer.findMany({
-    //where: { [selector]: searchTerm },
-    where: selector
+  return prisma.streamer.findMany({
+    where: { [selector]: searchTerm }
   });
-}; */
+};
 
-const getStreamerById = async (id: string) => {
+const getStreamerById = async (id: Streamer["_id"]) => {
   return prisma.streamer.findUnique({
     where: { id: id },
   });
