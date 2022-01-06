@@ -10,7 +10,7 @@
     "postinstall": "npx prisma generate"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "node --loader ts-node/esm --experimental-specifier-resolution=node prisma/seed.ts"
   },
   "type": "module",
   "keywords": [

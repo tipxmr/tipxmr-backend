@@ -6,8 +6,8 @@ import pouchdbUpsert from "pouchdb-upsert";
 import pouchdbFind from "pouchdb-find";
 import pouchdbAdapterMemory from "pouchdb-adapter-memory";
 import { defaultStreamerConfig } from "./data/defaultStreamerConfig";
-import { testStreamers } from "./data/streamerTestDB";
-import { Streamer } from "./data/Streamer";
+import { testStreamers } from "./data/intialTables";
+import { Streamer } from "./data/types";
 import { success, failure, Result } from "./results";
 
 PouchDB.plugin(pouchdbUpsert);

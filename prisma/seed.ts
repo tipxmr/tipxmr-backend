@@ -4,7 +4,11 @@ const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient();
 
+// Helper functions
+
 const truncateHashedSeed = (hashedSeed: string) => hashedSeed.slice(0, 11);
+
+// Seeding functions
 
 async function seedStreamers() {
   const promises = testStreamers.map(async (streamer) => {
@@ -42,6 +46,8 @@ const seed = async () => {
   await seedStreamers();
   await seedAccounts();
 };
+
+// Main function
 
 seed()
   .catch((e) => {
